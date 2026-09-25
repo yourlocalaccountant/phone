@@ -304,12 +304,12 @@
   const getContainer = (key) => {
     if (containers[key]) return containers[key];
     const el = document.createElement('div');
-    el.className = 'appc'; el.dataset.app = key;
+    el.className = 'appc'; el.dataset.appc = key;
     el.style.cssText = 'position:absolute;inset:0;';
     rootEl.appendChild(el);
     const c = { el, tabs: {}, modals: [] };
     if (key === 'od') {
-      TABS.forEach((t) => { const l = document.createElement('div'); l.className = 'layer'; l.dataset.tab = t; el.appendChild(l); c.tabs[t] = l; });
+      TABS.forEach((t) => { const l = document.createElement('div'); l.className = 'layer'; l.dataset.layerTab = t; el.appendChild(l); c.tabs[t] = l; });
       tabbarEl = document.createElement('div'); tabbarEl.className = 'tabbar'; el.appendChild(tabbarEl); c.tabbar = tabbarEl;
     } else if (key === 'sam') {
       const l = document.createElement('div'); l.className = 'layer'; el.appendChild(l); c.tabs.main = l;
@@ -333,6 +333,13 @@
     reg.set(e.u, { e, stack, li });
     const oldC = el.querySelector(':scope > .content');
     const top = oldC ? oldC.scrollTop : 0;
+    // remember the focused field so a repaint doesn't kick the user out of it
+    const ae = document.activeElement;
+    let keep = null;
+    if (ae && el.contains(ae) && (ae.dataset.k || ae.dataset.local !== undefined)) {
+      keep = { k: ae.dataset.k, l: ae.dataset.local, ref: ae.closest('[data-ref]')?.dataset.ref };
+      try { keep.s = ae.selectionStart; keep.e = ae.selectionEnd; } catch (err) { /* not a text field */ }
+    }
     let html;
     try {
       if (def.full) html = def.full(e.p, ctx);
@@ -358,6 +365,12 @@
     const nc = el.querySelector(':scope > .content');
     if (nc && keepScroll) nc.scrollTop = top;
     if (def.mount) { try { def.mount(el, e.p, ctx); } catch (err) { console.error(err); } }
+    if (keep) {
+      const q = keep.k !== undefined ? `[data-k="${CSS.escape(keep.k)}"]` : `[data-local="${CSS.escape(keep.l)}"]`;
+      const scope = keep.ref ? el.querySelector(`[data-ref="${CSS.escape(keep.ref)}"]`) || el : el;
+      const n = [...scope.querySelectorAll(q)].find((x) => x.matches('input,textarea,select'));
+      if (n) { n.focus({ preventScroll: true }); try { if (keep.s != null) n.setSelectionRange(keep.s, keep.e); } catch (err) { /* ignore */ } }
+    }
   };
 
   const syncLayer = (layerEl, stack, li, anim) => {
@@ -637,7 +650,7 @@
     if (suppressClick) { ev.stopPropagation(); ev.preventDefault(); return; }
     if (ev.target.closest('[data-sb-sam]')) { OD.nav.launch('sam'); return; }
     const t = ev.target.closest('[data-go],[data-present],[data-back],[data-dismiss],[data-tab],[data-act],[data-seg],[data-app],[data-tt],[data-ns]');
-    if (!t || !areaEl.contains(t)) return;
+    if (!t || !areaEl.contains(t) || t.matches('.appc, .layer, .screen, #app-root')) return;
     const ctx = N.ctxOf(t);
     const d = t.dataset;
     if (d.seg !== undefined && !d.act) {

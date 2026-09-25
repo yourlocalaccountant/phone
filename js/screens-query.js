@@ -62,6 +62,7 @@
   });
   screen('qv', {
     title: 'Query Vehicle', left: qDone, target: () => tmp('qv', { by: 'REGNO', reason: '3T', locMode: 'Use Current Location' }),
+    onChange: (k, v, ctx) => { const w = String(v || '').includes('*'); if (k === 'value' && w !== !!ctx.e.wild) { ctx.e.wild = w; N.refresh(ctx.u); } },
     body: (p) => {
       const d = tmp('qv', { by: 'REGNO', reason: '3T', locMode: 'Use Current Location' });
       const wild = String(d.value || '').includes('*');
