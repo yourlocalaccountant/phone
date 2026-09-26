@@ -106,6 +106,8 @@
       if (!o.passHash) o.passHash = OD.simpleHash('changeme');
       delete o.me;
     });
+    if (!OD.db.units) OD.db.units = []; // migration for saves from before CAD existed
+    if (!OD.db.cad) OD.db.cad = {};
     OD.saveNow();
     OD.boot();
     OD.onRoute();
