@@ -1,5 +1,9 @@
 .git
 .gitignore
+.wrangler
+node_modules
 wrangler.jsonc
 .assetsignore
 README.md
+package.json
+package-lock.json

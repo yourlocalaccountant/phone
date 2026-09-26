@@ -1,0 +1,13 @@
+{
+  "name": "phone",
+  "private": true,
+  "version": "1.0.0",
+  "description": "OnDuty browser recreation - static site, no build step",
+  "scripts": {
+    "build": "echo No build step needed - static site",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}
