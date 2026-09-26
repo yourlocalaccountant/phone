@@ -56,7 +56,7 @@ input, textarea, select { font: inherit; color: inherit; }
 .pc-row button:hover { background: #30405f; }
 .pc-route { margin-top: 10px; color: #8e97a8; font-size: 11px; word-break: break-all; }
 .pc-route code { color: #b6c7ff; }
-#pc-filter { width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #2b3446; background: #0c1017; color: #fff; margin-bottom: 8px; }
+#pc-filter { width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #2b3446; background: #0c1017; color: #fff; margin-bottom: 8px; font-size: 16px; }
 #directory details { border-bottom: 1px solid #1f2633; }
 #directory summary { cursor: pointer; padding: 8px 2px; font-weight: 600; color: #fff; list-style: none; display: flex; justify-content: space-between; }
 #directory summary::-webkit-details-marker { display: none; }
@@ -242,7 +242,7 @@ input, textarea, select { font: inherit; color: inherit; }
 .field .lbl .hint { color: var(--sub); }
 .field.req .lbl { color: var(--ios-red); }
 .field input[type=text], .field input[type=tel], .field input[type=email], .field input[type=number], .field input:not([type]), .field textarea {
-  width: 100%; border: 0; outline: 0; background: transparent; font-size: 15px; padding: 3px 0 0; margin: 0; color: #000;
+  width: 100%; border: 0; outline: 0; background: transparent; font-size: 16px; padding: 3px 0 0; margin: 0; color: #000;
 }
 .field input::placeholder, .field textarea::placeholder { color: #c0c0c5; }
 .field textarea { resize: none; min-height: 60px; line-height: 1.35; }
@@ -367,7 +367,7 @@ input, textarea, select { font: inherit; color: inherit; }
 .ta-row.dis { color: #aaa; }
 .searchbar { padding: 8px 10px; background: var(--grouped); }
 .searchbar .sbx { display: flex; align-items: center; gap: 6px; background: #e3e3e8; border-radius: 9px; padding: 0 8px; height: 34px; color: #8e8e93; }
-.searchbar input { border: 0; outline: 0; background: transparent; flex: 1; font-size: 15px; color: #000; }
+.searchbar input { border: 0; outline: 0; background: transparent; flex: 1; font-size: 16px; color: #000; }
 
 /* folder */
 .folder-card { background: #fff; }
@@ -410,7 +410,7 @@ input, textarea, select { font: inherit; color: inherit; }
 .alert .at { font-weight: 600; font-size: 16px; padding: 18px 16px 2px; }
 .alert .am { font-size: 13px; padding: 4px 16px 18px; line-height: 1.35; white-space: pre-line; }
 .alert .af { padding: 0 16px 12px; }
-.alert .af input { width: 100%; border: .5px solid #c0c0c5; border-radius: 6px; padding: 6px 8px; font-size: 14px; }
+.alert .af input { width: 100%; border: .5px solid #c0c0c5; border-radius: 6px; padding: 6px 8px; font-size: 16px; }
 .alert .ab { display: flex; border-top: .5px solid #c9c9ce; }
 .alert .ab.vert { flex-direction: column; }
 .alert .ab button { flex: 1; height: 44px; color: var(--tint); font-size: 16px; border-left: .5px solid #c9c9ce; }
@@ -501,7 +501,7 @@ input, textarea, select { font: inherit; color: inherit; }
 .web .wf { padding: 8px 12px; border-bottom: 1px solid #eee; }
 .web .wf label { display: block; font-size: 12px; font-weight: 600; color: #333; margin-bottom: 3px; }
 .web .wf label .rq { color: #d0021b; }
-.web .wf input, .web .wf select { width: 100%; border: 1px solid #ccc; border-radius: 3px; padding: 6px; font-size: 13px; background: #fff; }
+.web .wf input, .web .wf select { width: 100%; border: 1px solid #ccc; border-radius: 3px; padding: 6px; font-size: 16px; background: #fff; }
 .web .wseg { display: flex; border: 1px solid #1f7b83; border-radius: 3px; overflow: hidden; }
 .web .wseg button { flex: 1; padding: 5px; font-size: 12px; color: #1f7b83; border-left: 1px solid #1f7b83; }
 .web .wseg button:first-child { border-left: 0; }
@@ -648,5 +648,6 @@ input, textarea, select { font: inherit; color: inherit; }
   #device { width: 100vw; height: 100vh; height: 100dvh; border-radius: 0; padding: 0; background: #000; box-shadow: none; }
   #screen-area { width: 100%; height: 100%; border-radius: 0; }
   .notch { display: none; }
-  #dir-fab { display: block; position: fixed; left: 0; top: 50%; transform: translateY(-50%); z-index: 150; width: 20px; height: 48px; border-radius: 0 12px 12px 0; background: rgba(17,22,31,.55); color: #fff; font-size: 12px; padding: 0; }
+  #dir-fab { display: flex; align-items: center; justify-content: center; position: fixed; left: 0; top: 50%; transform: translateY(-50%); z-index: 150; width: 30px; height: 54px; border-radius: 0 14px 14px 0; background: rgba(17,22,31,.55); color: #fff; font-size: 14px; padding: 0; touch-action: manipulation; }
 }
+input, textarea, select, button, a, [data-go], [data-act], [data-present], [data-seg], [data-tab], [data-back], [data-dismiss] { touch-action: manipulation; }
