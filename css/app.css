@@ -241,7 +241,7 @@ input, textarea, select { font: inherit; color: inherit; }
 .field .lbl { font-size: 12.5px; color: #111; display: block; line-height: 1.3; }
 .field .lbl .hint { color: var(--sub); }
 .field.req .lbl { color: var(--ios-red); }
-.field input[type=text], .field input[type=tel], .field input[type=email], .field input[type=number], .field input:not([type]), .field textarea {
+.field input[type=text], .field input[type=tel], .field input[type=email], .field input[type=number], .field input[type=password], .field input:not([type]), .field textarea {
   width: 100%; border: 0; outline: 0; background: transparent; font-size: 16px; padding: 3px 0 0; margin: 0; color: #000;
 }
 .field input::placeholder, .field textarea::placeholder { color: #c0c0c5; }
@@ -474,6 +474,21 @@ input, textarea, select { font: inherit; color: inherit; }
 .lockscreen .lk-key.lk-sub-k { font-size: 10px; font-weight: 600; letter-spacing: .5px; background: none; border: none; }
 .lockscreen .lk-hint { margin-top: 20px; font-size: 11.5px; opacity: .55; max-width: 300px; line-height: 1.5; }
 .lockscreen .lk-face { margin-top: 20px; width: 46px; height: 46px; border-radius: 50%; background: rgba(255,255,255,.12); display: flex; align-items: center; justify-content: center; }
+
+/* ---------- in-app login (cosmetic, local-only – not a real credential) ---------- */
+#auth-root { position: absolute; inset: 0; z-index: 131; pointer-events: none; }
+.authscreen { position: absolute; inset: 0; overflow-y: auto; pointer-events: auto; background: radial-gradient(120% 90% at 80% 0%, #4a5a8a 0%, #1c2340 45%, #0a0d1f 100%); display: flex; flex-direction: column; align-items: center; color: #fff; padding: 56px 26px 30px; text-align: center; animation: fadeIn .25s both; }
+.authscreen .au-badge { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,.14); border-radius: 20px; padding: 6px 14px; font-size: 12.5px; }
+.authscreen .au-badge img { width: 20px; height: 20px; border-radius: 5px; }
+.authscreen .au-title { margin-top: 20px; font-size: 21px; font-weight: 700; }
+.authscreen .au-sub { font-size: 12.5px; opacity: .75; margin-top: 4px; max-width: 280px; line-height: 1.4; }
+.authscreen form { width: 100%; max-width: 280px; margin-top: 24px; display: flex; flex-direction: column; gap: 12px; }
+.authscreen input { width: 100%; box-sizing: border-box; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.28); border-radius: 10px; padding: 12px 14px; color: #fff; font-size: 16px; font-family: inherit; }
+.authscreen input::placeholder { color: rgba(255,255,255,.45); }
+.authscreen .au-err { min-height: 16px; font-size: 12.5px; color: #ff8a8a; }
+.authscreen button.au-submit { margin-top: 2px; background: var(--tint, #2f6fd6); color: #fff; border: none; border-radius: 10px; padding: 13px; font-size: 15px; font-weight: 600; }
+.authscreen button.au-submit:active { opacity: .85; }
+.authscreen .au-hint { margin-top: 24px; font-size: 11.5px; opacity: .55; max-width: 300px; line-height: 1.5; }
 
 /* edu banner */
 .edu-flag { position: absolute; top: 34px; left: 50%; transform: translateX(-50%); background: var(--edu); color: #fff; font-size: 8px; letter-spacing: 1.5px; padding: 1px 8px; border-radius: 0 0 6px 6px; z-index: 91; font-weight: 700; pointer-events: none; }

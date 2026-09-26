@@ -18,13 +18,14 @@
         <p>Interactive browser recreation</p>
       </div>
     </div>
-    <p class="panel-note">Unofficial mock-up rebuilt from the publicly released OIA document IR-01-23-16062. Every person, vehicle, location and record is fictional demo data. Nothing is sent anywhere – state is kept in this browser only.</p>
+    <p class="panel-note">Unofficial mock-up rebuilt from the publicly released OIA document IR-01-23-16062. Not NZ Police software and not connected to any real Police system – nothing is sent anywhere, state is kept in this browser only. Starts empty; log in / create an account to use it, or load fictional sample data below to explore every screen.</p>
     <div class="panel-controls">
       <label class="pc-toggle"><input type="checkbox" id="pc-offline"> <span>Offline (airplane mode)</span></label>
       <div class="pc-row">
         <button id="pc-home" type="button">Home screen</button>
         <button id="pc-lock" type="button">Show lock screen</button>
-        <button id="pc-reset" type="button">Reset demo data</button>
+        <button id="pc-sample" type="button">Load sample data</button>
+        <button id="pc-reset" type="button">Erase all data</button>
       </div>
       <div class="pc-route">Route: <code id="pc-route">/</code></div>
     </div>
@@ -39,6 +40,7 @@
         <div id="overlay-root"></div>
         <div id="toast-root"></div>
         <div id="lock-root"></div>
+        <div id="auth-root"></div>
         <div id="home-indicator" title="Swipe up / click to go to the home screen"></div>
       </div>
       <div class="notch"></div>

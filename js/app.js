@@ -65,6 +65,56 @@
     OD.ui.toast(v ? 'Offline – no coverage (queries will be queued)' : 'Back online');
   };
   OD.resetDemo = () => { OD.wipe(); OD.tmp = {}; OD.seed(); OD.saveNow(); location.hash = '#/'; location.reload(); };
+  OD.loadSample = () => { OD.wipe(); OD.tmp = {}; OD.seed({ sample: true }); OD.saveNow(); location.hash = '#/'; location.reload(); };
+
+  /* ------------------------------------------------------------ in-app login
+     A cosmetic email/password gate in front of the OnDuty/SAM apps: accounts
+     (admin or officer) are created here and stored only in this browser.
+     This is NOT real authentication, a real Police credential, or an
+     identity check against any real system – see README "Note on scope". */
+  const authRoot = () => document.getElementById('auth-root');
+  let authErr = '';
+  const authForm = (mode, err) => {
+    const badge = `<div class="au-badge"><img src="assets/icon-onduty.svg" alt="">Police iPhone (demo)</div>`;
+    if (mode === 'setup') {
+      return `<div class="authscreen">${badge}<div class="au-title">Create Admin Account</div><div class="au-sub">No accounts exist yet in this browser. Create the first account (it will be an Admin account) to continue.</div><form data-f="setup"><input name="name" placeholder="Full name" autocomplete="off" required><input name="email" type="email" placeholder="Email" autocomplete="username" required><input name="pass" type="password" placeholder="Password" autocomplete="new-password" required><input name="pass2" type="password" placeholder="Confirm password" autocomplete="new-password" required><div class="au-err">${esc(err)}</div><button type="submit" class="au-submit">Create Account</button></form><div class="au-hint">Fictional login for realism only. Accounts live in this browser's storage – this is not a real Police credential and isn't checked against any real system.</div></div>`;
+    }
+    return `<div class="authscreen">${badge}<div class="au-title">Log In</div><div class="au-sub">Sign in to OnDuty (demo).</div><form data-f="login"><input name="email" type="email" placeholder="Email" autocomplete="username" required><input name="pass" type="password" placeholder="Password" autocomplete="current-password" required><div class="au-err">${esc(err)}</div><button type="submit" class="au-submit">Log In</button></form><div class="au-hint">Fictional login for realism only. Accounts live in this browser's storage – this is not a real Police credential and isn't checked against any real system.</div></div>`;
+  };
+  const renderAuth = () => {
+    const root = authRoot(); if (!root) return;
+    const mode = OD.db.officers && OD.db.officers.length ? 'login' : 'setup';
+    root.innerHTML = authForm(mode, authErr);
+    const form = root.querySelector('form');
+    form.addEventListener('submit', (ev) => {
+      ev.preventDefault();
+      const fd = new FormData(form);
+      const email = String(fd.get('email') || '').trim().toLowerCase();
+      const pass = String(fd.get('pass') || '');
+      if (mode === 'setup') {
+        const name = String(fd.get('name') || '').trim();
+        const pass2 = String(fd.get('pass2') || '');
+        if (!name || !email || !pass) { authErr = 'All fields are required.'; return renderAuth(); }
+        if (pass !== pass2) { authErr = 'Passwords do not match.'; return renderAuth(); }
+        const qid = 'ADM' + String(1000 + Math.floor(Math.random() * 9000));
+        const officer = { qid, name, email, phone: '', rank: 'Sergeant', station: '', role: 'Admin', passHash: OD.simpleHash(pass) };
+        OD.db.officers.push(officer);
+        OD.db.session = qid; OD.db.me = { qid, name };
+        OD.saveNow(); authErr = ''; hideAuth(); N.render('none');
+        OD.ui.toast(`Welcome, ${name}`);
+      } else {
+        const officer = OD.db.officers.find((o) => (o.email || '').toLowerCase() === email && o.passHash === OD.simpleHash(pass));
+        if (!officer) { authErr = 'Incorrect email or password.'; return renderAuth(); }
+        OD.db.session = officer.qid; OD.db.me = { qid: officer.qid, name: officer.name };
+        OD.saveNow(); authErr = ''; hideAuth(); N.render('none');
+        OD.ui.toast(`Welcome back, ${officer.name}`);
+      }
+    });
+  };
+  const hideAuth = () => { const root = authRoot(); if (root) root.innerHTML = ''; };
+  OD.showAuth = () => { authErr = ''; renderAuth(); };
+  OD.hideAuth = hideAuth;
+  OD.logOut = () => { OD.db.session = null; OD.db.me = { qid: '', name: '' }; OD.saveNow(); N.homeScreen(); };
 
   /* -------------------------------------------------------------- directory */
   const H = (app, tab, stack, modals) => N.hashFor(app, tab, stack, modals);
@@ -140,6 +190,7 @@
   OD.onRoute = () => {
     const r = document.getElementById('pc-route'); if (r) r.textContent = decodeURIComponent(location.hash || '#/');
     document.querySelectorAll('#directory a').forEach((a) => a.classList.toggle('cur', a.getAttribute('href') === location.hash));
+    if ((N.st.app === 'od' || N.st.app === 'sam') && !OD.db.session) OD.showAuth(); else OD.hideAuth();
   };
 
   /* ------------------------------------------------------------------ fit */
@@ -155,7 +206,18 @@
   const start = () => {
     OD.db = OD.loadDB();
     if (!OD.db || OD.db.v !== 1) { OD.seed(); OD.saveNow(); }
-    if (!OD.db.officers || !OD.db.officers.length) { OD.db.officers = OD.clone(OD.data.officers); OD.save(); } // migrate older saves
+    // --- migrations for saves from before accounts/login existed ---
+    if (OD.db.session === undefined) OD.db.session = null;
+    if (!OD.db.me) OD.db.me = { qid: '', name: '' };
+    if (!OD.db.officers) OD.db.officers = [];
+    OD.db.officers.forEach((o) => {
+      if (!o.role) o.role = 'Admin'; // grandfather pre-existing officers in as Admin
+      if (!o.email) o.email = (o.qid || '').toLowerCase() + '@police.demo';
+      if (!o.passHash) o.passHash = OD.simpleHash('changeme');
+      delete o.me;
+    });
+    if (!OD.db.session && OD.db.me.qid && OD.db.officers.some((o) => o.qid === OD.db.me.qid)) OD.db.session = OD.db.me.qid; // keep a browser that was already "signed in" as such
+    OD.saveNow();
     OD.boot();
     OD.showLock();
     renderDirectory(); OD.onRoute();
@@ -163,7 +225,8 @@
     const cb = document.getElementById('pc-offline'); cb.checked = !!OD.db.offline; cb.addEventListener('change', () => OD.setOffline(cb.checked));
     document.getElementById('pc-home').addEventListener('click', () => N.homeScreen());
     document.getElementById('pc-lock').addEventListener('click', () => OD.showLock());
-    document.getElementById('pc-reset').addEventListener('click', () => { if (confirm('Reset all demo data stored in this browser?')) OD.resetDemo(); });
+    document.getElementById('pc-sample').addEventListener('click', () => { if (confirm('Erase everything currently stored in this browser and load fictional sample data (accounts, persons, vehicles, cases) so you can explore every screen?')) OD.loadSample(); });
+    document.getElementById('pc-reset').addEventListener('click', () => { if (confirm('Erase all accounts, paperwork and settings stored in this browser? This cannot be undone.')) OD.resetDemo(); });
     document.getElementById('directory').addEventListener('click', (e) => { if (e.target.closest('a') && window.innerWidth <= 760) document.getElementById('panel').classList.remove('open'); });
     document.getElementById('dir-fab').addEventListener('click', () => document.getElementById('panel').classList.toggle('open'));
     window.addEventListener('resize', fit); fit();

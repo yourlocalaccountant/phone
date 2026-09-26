@@ -33,6 +33,8 @@
     return () => { h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return ((h ^= h >>> 16) >>> 0) / 4294967296; };
   };
   OD.pick = (r, arr) => arr[Math.floor(r() * arr.length)];
+  // Not real crypto – just avoids storing passwords as plain text in this demo's local storage.
+  OD.simpleHash = (s) => { s = String(s); let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return Math.abs(h).toString(36); };
 
   /* ------------------------------------------------------------ formatting */
   const pad = (n) => String(n).padStart(2, '0');

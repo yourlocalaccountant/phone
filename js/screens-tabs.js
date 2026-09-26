@@ -63,29 +63,35 @@
   /* ================================================================== MORE */
   screen('more', {
     title: 'More', cls: 'grouped',
-    body: () => `<div class="gap"></div><div class="group"><div class="row lg" data-go="settings">Settings<span class="chev">${I.chev}</span></div><div class="row lg" data-go="officers">Officers<span class="right">${OD.db.officers.length}</span><span class="chev">${I.chev}</span></div><div class="row lg" data-go="support">Support<span class="chev">${I.chev}</span></div><div class="row lg" data-go="audit">Audit Log<span class="chev">${I.chev}</span></div></div><div class="gap"></div><div class="group"><div class="row lg" data-go="${OD.go('lib', { mode: 'browse' })}">LRT Offence Library<span class="chev">${I.chev}</span></div><div class="row lg" data-go="cvir-lib">CVIR Defect Library<span class="chev">${I.chev}</span></div></div>`,
+    body: () => `<div class="gap"></div><div class="group"><div class="row lg" data-go="settings">Settings<span class="chev">${I.chev}</span></div>${OD.isAdmin() ? `<div class="row lg" data-go="officers">Officers<span class="right">${OD.db.officers.length}</span><span class="chev">${I.chev}</span></div>` : ''}<div class="row lg" data-go="support">Support<span class="chev">${I.chev}</span></div><div class="row lg" data-go="audit">Audit Log<span class="chev">${I.chev}</span></div></div><div class="gap"></div><div class="group"><div class="row lg" data-go="${OD.go('lib', { mode: 'browse' })}">LRT Offence Library<span class="chev">${I.chev}</span></div><div class="row lg" data-go="cvir-lib">CVIR Defect Library<span class="chev">${I.chev}</span></div></div>`,
   });
 
   /* ============================================================== OFFICERS
-     A fictional, local-only roster (Register Officer / manage officers).
-     This is demo data management, not real identity verification – it only
-     ever feeds the pickers inside this browser (supervisor, call sign,
-     "seized by" etc). Nothing here is sent anywhere or checked against any
-     real Police system. */
+     An admin-only, local-only roster and login-account list (Register
+     Officer / manage officers). This is demo account management, not real
+     identity verification – it only ever feeds the pickers inside this
+     browser (supervisor, call sign, "seized by" etc) and the in-app login.
+     Nothing here is sent anywhere or checked against any real Police
+     system. */
   screen('officers', {
     title: 'Officers',
-    right: '<button class="nb" data-go="officer-edit">+ Register</button>',
+    right: () => (OD.isAdmin() ? '<button class="nb" data-go="officer-edit">+ Register</button>' : ''),
     body: () => {
+      if (!OD.isAdmin()) return U.empty('Admin access required.');
       const rows = OD.db.officers.map((o) => {
-        const inner = `<div class="row" data-go="${OD.go('officer-edit', { qid: o.qid })}"><div class="grow"><div class="kv-k">${esc(o.qid)}${o.me ? ' (you)' : ''}</div><div class="kv-v">${esc(o.name)} · ${esc(o.station || '')}</div></div><span class="chev">${I.chev}</span></div>`;
-        return o.me ? inner : OD.swipeRow(inner, { right: [{ label: 'Delete', act: 'officerDelete', a: o.qid }] });
+        const you = o.qid === OD.db.session;
+        const inner = `<div class="row" data-go="${OD.go('officer-edit', { qid: o.qid })}"><div class="grow"><div class="kv-k">${esc(o.qid)}${you ? ' (you)' : ''}</div><div class="kv-v">${esc(o.name)} · ${esc(o.station || '')} · ${esc(o.role || 'Officer')}</div></div><span class="chev">${I.chev}</span></div>`;
+        return you ? inner : OD.swipeRow(inner, { right: [{ label: 'Delete', act: 'officerDelete', a: o.qid }] });
       }).join('');
-      return `<div class="footnote">A fictional roster kept only in this browser – it feeds the Supervisor, Authorising Officer, Call Sign and "Seized/Verified By" pickers elsewhere in the demo. Swipe an officer left to remove them.</div><div class="sh">ROSTER (${OD.db.officers.length})</div><div class="group">${rows}</div><div class="row add" data-go="officer-edit">+ Register Officer</div>`;
+      return `<div class="footnote">A fictional, local-only roster and login-account list – it feeds the Supervisor, Authorising Officer, Call Sign and "Seized/Verified By" pickers elsewhere in the demo, and each officer can log in with their email and password. Swipe an officer left to remove them.</div><div class="sh">ROSTER (${OD.db.officers.length})</div><div class="group">${rows}</div><div class="row add" data-go="officer-edit">+ Register Officer</div>`;
     },
   });
   action('officerDelete', (d, el, ctx) => {
+    if (!OD.isAdmin()) return OD.ui.toast('Admin access required');
     const o = OD.officer(d.a); if (!o) return;
-    OD.ui.confirm('Remove officer', `Remove ${o.name} (${o.qid}) from the roster?`, 'Remove', () => {
+    if (o.qid === OD.db.session) return OD.ui.toast("You can't remove the account you're logged in as");
+    if (o.role === 'Admin' && OD.db.officers.filter((x) => x.role === 'Admin').length <= 1) return OD.ui.toast('At least one Admin account is required');
+    OD.ui.confirm('Remove officer', `Remove ${o.name} (${o.qid}) from the roster? This also deletes their login.`, 'Remove', () => {
       OD.db.officers = OD.db.officers.filter((x) => x.qid !== d.a);
       // clear any picker values that pointed at the removed officer
       const label = `${o.qid} - ${o.name}`;
@@ -104,42 +110,59 @@
       { t: 'first', l: 'First Name', req: 1 },
       { t: 'last', l: 'Last Name', req: 1 },
       { pk: 'station', l: 'Station', o: 'stations' },
+      { h: 'LOGIN' },
+      { t: 'email', l: 'Email (used to log in)', req: 1, kb: 'email' },
+      { seg: 'role', l: 'Role', o: ['Admin', 'Officer'] },
       { h: 'CONTACT (OPTIONAL)' },
-      { t: 'email', l: 'Email', opt: 1, kb: 'email' },
       { t: 'phone', l: 'Phone Number', opt: 1, kb: 'tel' },
-      { note: 'This is a fictional demo profile stored only in this browser. It is not a real Police credential and does not grant access to anything outside this recreation.' },
+      { note: 'This is a fictional demo profile stored only in this browser. Email and password are used only to log in to this recreation locally – not a real Police credential and not checked against any real system.' },
     ],
   };
   screen('officer-edit', {
     title: (p) => (p.qid ? 'Edit Officer' : 'Register Officer'),
-    right: (p) => (p.qid && p.qid !== OD.db.me.qid ? '<button class="nb red" data-act="officerDeleteEdit">Delete</button>' : ''),
+    right: (p) => (p.qid && p.qid !== OD.db.session ? '<button class="nb red" data-act="officerDeleteEdit">Delete</button>' : ''),
     target: (p) => OD.resolve('tmp:officer' + (p.qid || 'new')),
     body: (p) => {
+      if (!OD.isAdmin()) return U.empty('Admin access required.');
       const key = 'officer' + (p.qid || 'new');
       const existing = p.qid && OD.officer(p.qid);
       const d = OD.resolve('tmp:' + key);
-      if (existing && !d._loaded) { const [first, ...rest] = existing.name.replace(/^\S+\s+/, '').split(' '); Object.assign(d, { qid: existing.qid, rank: existing.rank, station: existing.station, email: existing.email || '', phone: existing.phone || '', first: existing.first || first || '', last: existing.last || rest.join(' ') || '', _existing: true, _loaded: true }); }
-      if (!existing && !d._loaded) { Object.assign(d, { rank: 'Constable', station: OD.db.settings.reporting, _loaded: true }); }
-      return OD.renderFields(OD.forms['officer-edit'].fields, d, { ref: 'tmp:' + key, fid: 'officer-edit', pw: null, reviewed: d._reviewed }) + `<button class="bigbtn" data-act="officerSave" data-a="${esc(p.qid || '')}">${existing ? 'Save' : 'Register Officer'}</button>`;
+      if (existing && !d._loaded) { const [first, ...rest] = existing.name.replace(/^\S+\s+/, '').split(' '); Object.assign(d, { qid: existing.qid, rank: existing.rank, station: existing.station, email: existing.email || '', phone: existing.phone || '', role: existing.role || 'Officer', first: existing.first || first || '', last: existing.last || rest.join(' ') || '', _existing: true, _loaded: true }); }
+      if (!existing && !d._loaded) { Object.assign(d, { rank: 'Constable', station: OD.db.settings.reporting || '', role: 'Officer', _loaded: true }); }
+      const passBlock = `<div class="sh">${existing ? 'CHANGE PASSWORD (OPTIONAL)' : 'SET PASSWORD'}</div><div class="field"><span class="lbl">${existing ? 'New Password' : 'Password'}</span><input type="password" data-k="pass" value="${esc(d.pass || '')}" placeholder="${existing ? 'Leave blank to keep current' : 'Tap to add...'}" autocomplete="new-password"></div><div class="field"><span class="lbl">Confirm Password</span><input type="password" data-k="pass2" value="${esc(d.pass2 || '')}" placeholder="Tap to add..." autocomplete="new-password"></div>`;
+      return OD.renderFields(OD.forms['officer-edit'].fields, d, { ref: 'tmp:' + key, fid: 'officer-edit', pw: null, reviewed: d._reviewed }) + passBlock + `<button class="bigbtn" data-act="officerSave" data-a="${esc(p.qid || '')}">${existing ? 'Save' : 'Register Officer'}</button>`;
     },
   });
   action('officerSave', (d, el, ctx) => {
+    if (!OD.isAdmin()) return OD.ui.toast('Admin access required');
     const p = ctx.p; const key = 'officer' + (p.qid || 'new');
     const x = OD.resolve('tmp:' + key);
-    if (!x.qid || !x.first || !x.last) { x._reviewed = true; OD.save(); N.refresh(ctx.u); return OD.ui.toast('QID, first name and last name are required'); }
+    if (!x.qid || !x.first || !x.last || !x.email) { x._reviewed = true; OD.save(); N.refresh(ctx.u); return OD.ui.toast('QID, name and email are required'); }
+    const email = String(x.email).trim().toLowerCase();
     const qid = String(x.qid).toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const dupEmail = OD.db.officers.find((o) => (o.email || '').toLowerCase() === email && o.qid !== p.qid);
+    if (dupEmail) return OD.ui.toast('That email is already used by another officer');
+    if (x.pass || x.pass2) { if (x.pass !== x.pass2) return OD.ui.toast('Passwords do not match'); }
+    else if (!p.qid) return OD.ui.toast('Set a password');
     const name = `${x.rank} ${x.first.charAt(0).toUpperCase()}. ${x.last.charAt(0).toUpperCase()}${x.last.slice(1)}`;
     if (p.qid) {
-      const o = OD.officer(p.qid); Object.assign(o, { name, rank: x.rank, station: x.station, email: x.email, phone: x.phone, first: x.first, last: x.last });
+      const o = OD.officer(p.qid);
+      if (o.role === 'Admin' && x.role !== 'Admin' && OD.db.officers.filter((y) => y.role === 'Admin').length <= 1) return OD.ui.toast('At least one Admin account is required');
+      Object.assign(o, { name, rank: x.rank, station: x.station, email, phone: x.phone, first: x.first, last: x.last, role: x.role || o.role });
+      if (x.pass) o.passHash = OD.simpleHash(x.pass);
+      if (o.qid === OD.db.session) OD.db.me = { qid: o.qid, name: o.name };
     } else {
       if (OD.officer(qid)) return OD.ui.toast('An officer with that QID already exists');
-      OD.db.officers.push({ qid, name, rank: x.rank, station: x.station, email: x.email, phone: x.phone, first: x.first, last: x.last });
+      OD.db.officers.push({ qid, name, rank: x.rank, station: x.station, email, phone: x.phone, first: x.first, last: x.last, role: x.role || 'Officer', passHash: OD.simpleHash(x.pass) });
     }
     OD.tmp[key] = {}; OD.save(); N.pop(); OD.ui.toast(p.qid ? 'Officer updated' : `${name} registered`);
   });
   action('officerDeleteEdit', (d, el, ctx) => {
+    if (!OD.isAdmin()) return OD.ui.toast('Admin access required');
     const o = OD.officer(ctx.p.qid); if (!o) return;
-    OD.ui.confirm('Remove officer', `Remove ${o.name} (${o.qid}) from the roster?`, 'Remove', () => {
+    if (o.qid === OD.db.session) return OD.ui.toast("You can't remove the account you're logged in as");
+    if (o.role === 'Admin' && OD.db.officers.filter((x) => x.role === 'Admin').length <= 1) return OD.ui.toast('At least one Admin account is required');
+    OD.ui.confirm('Remove officer', `Remove ${o.name} (${o.qid}) from the roster? This also deletes their login.`, 'Remove', () => {
       OD.db.officers = OD.db.officers.filter((x) => x.qid !== o.qid);
       const label = `${o.qid} - ${o.name}`; const s = OD.db.settings;
       if (s.supervisor === label) s.supervisor = ''; if (s.authOfficer === label) s.authOfficer = '';
@@ -152,11 +175,14 @@
       const s = OD.db.settings; const db = OD.db;
       const pk = (k, l, o, title) => `<div class="field pick" data-go="${OD.go('picker', { t: 'db:settings', k, o, title: title || l })}"><span class="lbl">${esc(l)}</span><div class="pv">${esc(s[k] || 'Select')}</div></div>`;
       const dv = s.vehicles.find((v) => v.id === s.defaultVehicle);
-      return `<div class="sh">USER</div>${U.kv('QID', db.me.qid)}${U.kv('Name', db.me.name)}<div class="sh">LOCATION SEARCHES</div><div class="field"><span class="lbl">Default location query boundary</span>${U.seg('boundary', ['National', 'District', 'Station'], s.boundary)}</div>${pk('boundaryName', 'Boundary', 'l:boundaries')}<div class="sh">STATION SETTINGS</div>${pk('scene', 'Scene Station', 'l:stations')}${pk('reporting', 'Reporting Station', 'l:stations')}${pk('district', 'District', 'l:districts')}<div class="sh">VEHICLES AND EQUIPMENT</div><div class="row" data-present="veh-equip"><div class="grow"><div class="kv-k">Vehicles and Equipment</div><div class="kv-v">${esc(dv ? `${dv.rego} - ${dv.type}` : 'Not set')}</div></div><span class="chev">${I.chev}</span></div><div class="sh">SUPERVISOR</div>${pk('supervisor', 'Supervisor', 'x:supervisors')}${pk('authOfficer', 'Warrantless Search Authorising Officer', 'x:supervisors')}<div class="sh">UNIT</div>${pk('callSign', 'Call Sign', 'l:callSigns')}<div class="sh">DEMO CONTROLS</div><div class="row tap" data-act="toggleOffline"><div class="grow">Offline (simulate no coverage)</div><span class="switch ${db.offline ? 'on' : ''}"></span></div><div class="row danger" data-act="resetDemo">Reset demo data</div><div class="footnote">This is an unofficial browser recreation built from a publicly released OIA document. All records are fictional demo data kept only in this browser.</div>`;
+      const me = OD.officer(db.session);
+      return `<div class="sh">ACCOUNT</div>${U.kv('QID', db.me.qid)}${U.kv('Name', db.me.name)}${U.kv('Role', (me && me.role) || '')}<div class="row danger" data-act="logOut">Log Out</div><div class="sh">LOCATION SEARCHES</div><div class="field"><span class="lbl">Default location query boundary</span>${U.seg('boundary', ['National', 'District', 'Station'], s.boundary)}</div>${pk('boundaryName', 'Boundary', 'l:boundaries')}<div class="sh">STATION SETTINGS</div>${pk('scene', 'Scene Station', 'l:stations')}${pk('reporting', 'Reporting Station', 'l:stations')}${pk('district', 'District', 'l:districts')}<div class="sh">VEHICLES AND EQUIPMENT</div><div class="row" data-present="veh-equip"><div class="grow"><div class="kv-k">Vehicles and Equipment</div><div class="kv-v">${esc(dv ? `${dv.rego} - ${dv.type}` : 'Not set')}</div></div><span class="chev">${I.chev}</span></div><div class="sh">SUPERVISOR</div>${pk('supervisor', 'Supervisor', 'x:supervisors')}${pk('authOfficer', 'Warrantless Search Authorising Officer', 'x:supervisors')}<div class="sh">UNIT</div>${pk('callSign', 'Call Sign', 'l:callSigns')}<div class="sh">DEMO CONTROLS</div><div class="row tap" data-act="toggleOffline"><div class="grow">Offline (simulate no coverage)</div><span class="switch ${db.offline ? 'on' : ''}"></span></div><div class="row" data-act="loadSample">Load sample data (for exploring every screen)</div><div class="row danger" data-act="resetDemo">Erase all data</div><div class="footnote">This is an unofficial browser recreation built from a publicly released OIA document. It is not NZ Police software and is not connected to any real Police system – nothing you enter is sent anywhere, it stays in this browser only.</div>`;
     },
   });
   action('toggleOffline', () => OD.setOffline(!OD.db.offline));
-  action('resetDemo', () => OD.ui.confirm('Reset demo data', 'This clears all paperwork, queries and settings stored in this browser and reloads the demo data.', 'Reset', () => OD.resetDemo(), true));
+  action('logOut', () => OD.ui.confirm('Log Out', 'Log out of this OnDuty (demo) account?', 'Log Out', () => OD.logOut(), true));
+  action('loadSample', () => OD.ui.confirm('Load sample data', 'This erases anything currently stored in this browser and loads fictional sample accounts, persons, vehicles and cases so you can explore every screen.', 'Load Sample Data', () => OD.loadSample(), true));
+  action('resetDemo', () => OD.ui.confirm('Erase all data', 'This permanently erases all accounts, paperwork and settings stored in this browser. You will need to create a new admin account afterwards.', 'Erase All Data', () => OD.resetDemo(), true));
 
   screen('veh-equip', {
     title: 'Vehicles and Equipment',

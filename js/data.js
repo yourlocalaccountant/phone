@@ -90,26 +90,29 @@
   ];
 
   /* -------------------------------------------------------------- officers */
-  // Seed defaults only – the live, editable roster (including anyone registered
-  // through More > Officers) lives in OD.db.officers. Every name/QID here is
-  // invented demo data, same as everything else in this recreation.
+  // Fictional sample roster, only ever loaded via Settings > "Load sample
+  // data" (never on by default – see OD.seed below). The real, editable
+  // roster (accounts created via login / More > Officers) lives in
+  // OD.db.officers; every name/QID/password here is invented demo data.
   L.ranks = ['Constable', 'Senior Constable', 'Sergeant', 'Senior Sergeant', 'Inspector', 'Senior Inspector', 'Detective', 'Detective Sergeant', 'Detective Senior Sergeant', 'Superintendent'];
+  const SAMPLE_PASS = OD.simpleHash('demo1234');
   D.officers = [
-    { qid: 'ABCD01', name: 'Constable D. User', rank: 'Constable', me: true },
-    { qid: 'TTT123', name: 'Sergeant T. Taylor', rank: 'Sergeant' },
-    { qid: 'ABC012', name: 'Constable A. Brown', rank: 'Constable' },
-    { qid: 'ABC021', name: 'Constable R. Ngata', rank: 'Constable' },
-    { qid: 'KWCA02', name: 'Sergeant K. Walker', rank: 'Sergeant' },
-    { qid: 'DHC142', name: 'Detective H. Chen', rank: 'Detective' },
-    { qid: 'MPL310', name: 'Constable M. Patel', rank: 'Constable' },
-    { qid: 'JRS220', name: 'Senior Sergeant J. Ross', rank: 'Senior Sergeant' },
-    { qid: 'LKT445', name: 'Constable L. Kaur', rank: 'Constable' },
-  ].map((o) => ({ station: 'Wellington Central', ...o }));
+    { qid: 'ABCD01', name: 'Constable D. User', rank: 'Constable', email: 'd.user@police.demo', role: 'Admin' },
+    { qid: 'TTT123', name: 'Sergeant T. Taylor', rank: 'Sergeant', email: 't.taylor@police.demo', role: 'Officer' },
+    { qid: 'ABC012', name: 'Constable A. Brown', rank: 'Constable', email: 'a.brown@police.demo', role: 'Officer' },
+    { qid: 'ABC021', name: 'Constable R. Ngata', rank: 'Constable', email: 'r.ngata@police.demo', role: 'Officer' },
+    { qid: 'KWCA02', name: 'Sergeant K. Walker', rank: 'Sergeant', email: 'k.walker@police.demo', role: 'Officer' },
+    { qid: 'DHC142', name: 'Detective H. Chen', rank: 'Detective', email: 'h.chen@police.demo', role: 'Officer' },
+    { qid: 'MPL310', name: 'Constable M. Patel', rank: 'Constable', email: 'm.patel@police.demo', role: 'Officer' },
+    { qid: 'JRS220', name: 'Senior Sergeant J. Ross', rank: 'Senior Sergeant', email: 'j.ross@police.demo', role: 'Officer' },
+    { qid: 'LKT445', name: 'Constable L. Kaur', rank: 'Constable', email: 'l.kaur@police.demo', role: 'Officer' },
+  ].map((o) => ({ station: 'Wellington Central', passHash: SAMPLE_PASS, ...o }));
   // Dynamic option providers – always read the *current* roster (seed + any
   // officers registered in this browser), so newly registered officers show
   // up in every supervisor / QID picker immediately.
   OD.optProviders.supervisors = () => OD.db.officers.filter((o) => /Sergeant|Inspector|Superintendent/.test(o.rank)).map((o) => `${o.qid} - ${o.name}`);
   OD.optProviders.officerQids = () => OD.db.officers.map((o) => `${o.qid} - ${o.name}`);
+  OD.isAdmin = () => !!OD.db && OD.officer(OD.db.session)?.role === 'Admin';
 
   /* ------------------------------------------------------- LRT offence library */
   const O = (code, desc, cat, fee, extra = {}) => ({ code, desc, cat, fee, ...extra });
@@ -477,46 +480,74 @@
     ].map((t) => [t.id, t]));
   };
 
-  /* ---------------------------------------------------------------- seed */
-  OD.seed = () => {
+  /* ---------------------------------------------------------------- seed
+     By default this produces a genuinely empty install: no officers, no
+     accounts, no cases – log in via the in-app login to create the first
+     (admin) account. Pass {sample:true} (only ever done via an explicit
+     "Load sample data" action) to additionally load the fictional roster
+     and case data below, for exploring every screen. */
+  OD.seed = (opts = {}) => {
     const now = Date.now();
     const db = {
       v: 1, offline: false, created: now,
-      me: { qid: 'ABCD01', name: 'Constable D. User' },
+      session: null,
+      me: { qid: '', name: '' },
       settings: {
-        boundary: 'District', boundaryName: 'Wellington Central, Wellington', district: 'Wellington', scene: 'Wellington Central', reporting: 'Wellington Central',
-        supervisor: 'TTT123 - Sergeant T. Taylor', authOfficer: 'KWCA02 - Sergeant K. Walker', callSign: 'WN10',
-        vehicles: [
-          { id: 'pv1', rego: 'AAA111', type: 'Marked', speed: ['Laser', 'Speedo'], breath: [{ id: 'bd1', device: 'Drager 7510NZ', serial: '223456', cal: '2026-01-01' }] },
-          { id: 'pv2', rego: 'BBB222', type: 'Marked', speed: [], breath: [] },
-          { id: 'pv3', rego: 'CCC333', type: 'Marked', speed: ['Laser', 'Speedo'], breath: [] },
-          { id: 'pv4', rego: 'DDD444', type: 'Unmarked', speed: ['Laser'], breath: [] },
-          { id: 'pv5', rego: 'EEEFFF', type: 'Marked', speed: ['Laser'], breath: [] },
-        ],
-        defaultVehicle: 'pv1',
+        boundary: 'District', boundaryName: '', district: '', scene: '', reporting: '',
+        supervisor: '', authOfficer: '', callSign: '',
+        vehicles: [],
+        defaultVehicle: null,
       },
-      officers: OD.clone(D.officers),
-      persons: seedPersons(), vehicles: seedVehicles(), locations: seedLocations(), occurrences: seedOccurrences(now),
-      orgs: {
-        G1: { id: 'G1', name: 'BLUE STREET MOTORS LIMITED', cat: 'Business', type: 'Car dealer', addr: '12 Blue Street, Thorndon, Wellington 6011', alerts: [] },
-        G2: { id: 'G2', name: 'HARBOUR FREIGHT (DEMO) LTD', cat: 'Business', type: 'Transport operator', addr: '5 Wharf Road, Wellington 6011', alerts: ['FLAGS'], tsl: 'TSL123456' },
-        G3: { id: 'G3', name: 'ST MARKS CHURCH (DEMO)', cat: 'Other', type: 'Place of Worship', addr: '2 Woodward Street, Wellington', alerts: [] },
-        G4: { id: 'G4', name: 'THORNDON SCHOOL (DEMO)', cat: 'Other', type: 'School', addr: '20 Turnbull Street, Wellington', alerts: [] },
-        G5: { id: 'G5', name: 'CAPITAL PISTOL CLUB (DEMO)', cat: 'Club', type: 'Gun Club / Range', addr: '1 Range Road, Wellington', alerts: [] },
-      },
+      officers: [],
+      persons: {}, vehicles: {}, locations: {}, occurrences: {},
+      orgs: {},
       items: {},
-      bail: seedBail(now), wta: seedWta(),
-      tasks: seedTasks(now), taskDistrict: 'Southern', tasksUpdated: now,
+      bail: {}, wta: {},
+      tasks: {}, taskDistrict: 'Wellington', tasksUpdated: now,
       queries: [], folders: [], home: [], paperwork: {},
-      pinnedOffences: ['E975', 'E979', 'C101', 'L452', 'F201'],
-      audit: [], bookmarks: [], cardEvents: OD.clone(D.cardEvents),
+      pinnedOffences: [],
+      audit: [], bookmarks: [], cardEvents: [],
       homeFilter: { days: 1, owner: 'Mine', hidden: false, types: ['Folders', 'QP', 'QV', 'QL', 'QO', 'QI', 'Objects'] },
-      lastUsed: ['PoW', 'PoE', 'GCR'],
+      lastUsed: [],
       caseRead: {},
     };
     OD.db = db;
-    OD.seeding = true;
-    try { OD.seedActivity && OD.seedActivity(now); } finally { OD.seeding = false; }
+    if (opts.sample) {
+      OD.seeding = true;
+      try {
+        Object.assign(db, {
+          settings: {
+            boundary: 'District', boundaryName: 'Wellington Central, Wellington', district: 'Wellington', scene: 'Wellington Central', reporting: 'Wellington Central',
+            supervisor: 'TTT123 - Sergeant T. Taylor', authOfficer: 'KWCA02 - Sergeant K. Walker', callSign: 'WN10',
+            vehicles: [
+              { id: 'pv1', rego: 'AAA111', type: 'Marked', speed: ['Laser', 'Speedo'], breath: [{ id: 'bd1', device: 'Drager 7510NZ', serial: '223456', cal: '2026-01-01' }] },
+              { id: 'pv2', rego: 'BBB222', type: 'Marked', speed: [], breath: [] },
+              { id: 'pv3', rego: 'CCC333', type: 'Marked', speed: ['Laser', 'Speedo'], breath: [] },
+              { id: 'pv4', rego: 'DDD444', type: 'Unmarked', speed: ['Laser'], breath: [] },
+              { id: 'pv5', rego: 'EEEFFF', type: 'Marked', speed: ['Laser'], breath: [] },
+            ],
+            defaultVehicle: 'pv1',
+          },
+          officers: OD.clone(D.officers),
+          persons: seedPersons(), vehicles: seedVehicles(), locations: seedLocations(), occurrences: seedOccurrences(now),
+          orgs: {
+            G1: { id: 'G1', name: 'BLUE STREET MOTORS LIMITED', cat: 'Business', type: 'Car dealer', addr: '12 Blue Street, Thorndon, Wellington 6011', alerts: [] },
+            G2: { id: 'G2', name: 'HARBOUR FREIGHT (DEMO) LTD', cat: 'Business', type: 'Transport operator', addr: '5 Wharf Road, Wellington 6011', alerts: ['FLAGS'], tsl: 'TSL123456' },
+            G3: { id: 'G3', name: 'ST MARKS CHURCH (DEMO)', cat: 'Other', type: 'Place of Worship', addr: '2 Woodward Street, Wellington', alerts: [] },
+            G4: { id: 'G4', name: 'THORNDON SCHOOL (DEMO)', cat: 'Other', type: 'School', addr: '20 Turnbull Street, Wellington', alerts: [] },
+            G5: { id: 'G5', name: 'CAPITAL PISTOL CLUB (DEMO)', cat: 'Club', type: 'Gun Club / Range', addr: '1 Range Road, Wellington', alerts: [] },
+          },
+          bail: seedBail(now), wta: seedWta(),
+          tasks: seedTasks(now), taskDistrict: 'Southern',
+          pinnedOffences: ['E975', 'E979', 'C101', 'L452', 'F201'],
+          cardEvents: OD.clone(D.cardEvents),
+          lastUsed: ['PoW', 'PoE', 'GCR'],
+        });
+        OD.seedActivity && OD.seedActivity(now);
+        const me = db.officers.find((o) => o.qid === 'ABCD01') || db.officers[0];
+        if (me) { db.session = me.qid; db.me = { qid: me.qid, name: me.name }; }
+      } finally { OD.seeding = false; }
+    }
     return db;
   };
 

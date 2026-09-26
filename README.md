@@ -2,7 +2,7 @@
 
 An interactive, click-through recreation of the NZ Police **OnDuty** iPhone app (and its companion **SAM** map app), rebuilt in plain HTML/CSS/JavaScript from the screenshots and procedures in the publicly released OIA response **IR-01-23-16062** ("OnDuty" user guides, June 2023).
 
-> **Unofficial demo.** This project is not affiliated with or endorsed by New Zealand Police. Every person, vehicle, address, case, task and notice number in it is fictional demo data. No police crest or logo is used. Nothing is sent over the network – all state lives in the browser's `localStorage`.
+> **Unofficial demo.** This project is not affiliated with or endorsed by New Zealand Police, and is not connected to any real Police system. No police crest or logo is used. Nothing is sent over the network – all state (including any account you create) lives in the browser's `localStorage`. It starts completely empty; open **More › Settings** (or the side panel) to load fictional sample data instead, if you'd rather explore every screen pre-populated.
 
 ## Run it
 
@@ -17,7 +17,7 @@ Every screen has its own URL (`#/od/<tab>/<screen>,<params>/…`), so the browse
 
 ## What's included
 
-**Phone shell** – home screen with *OnDuty*, *OnDuty Edu* (Education build, pink icon + banner) and *SAM*; iOS status bar; tap the home bar to go back to the home screen; a cosmetic **passcode lock screen** appears on every page load (any 4-digit code, or the SKIP button, unlocks it – for realism only, it is not real security and gates nothing outside this demo).
+**Phone shell** – home screen with *OnDuty*, *OnDuty Edu* (Education build, pink icon + banner) and *SAM*; iOS status bar; tap the home bar to go back to the home screen; a cosmetic **passcode lock screen** appears on every page load (any 4-digit code, or the SKIP button, unlocks it – for realism only, it is not real security and gates nothing outside this demo). Opening *OnDuty* or *SAM* for the first time asks you to create an **account** (name, email, password – the first account becomes an Admin); after that it's a normal email/password log in, stored only in this browser. Log out again from *More › Settings*.
 
 **OnDuty tabs**
 
@@ -28,7 +28,7 @@ Every screen has its own URL (`#/od/<tab>/<screen>,<params>/…`), so the browse
 | Tasks | district picker, colour-coded due times, task detail, previous actions, delegates, attachments, update task (offline sync pending) |
 | Paperwork | Awaiting Approval / Returned / Incomplete / Completed lists, Take Action (search, recently used), type filter |
 | Assigned | 30 most recent assigned cases, case summary, Update Narrative |
-| More | Settings (location boundary, stations, vehicles & equipment incl. speed and breath-test devices, supervisor, call sign), **Officers** (fictional roster – register / edit / remove officers, who then appear in every Supervisor / Authorising Officer / Call Sign / "Seized By" picker in the app), Support (Refresh / Wipe & Reload, notice numbers, reference data), Audit Log, LRT Offence Library (pin / reorder pinned offences, categories incl. Impaired Driving), CVIR Defect Library |
+| More | Settings (account / log out, location boundary, stations, vehicles & equipment incl. speed and breath-test devices, supervisor, call sign), **Officers** – *Admin accounts only* (register / edit / remove officer accounts – email, password and an Admin/Officer role each – who then appear in every Supervisor / Authorising Officer / Call Sign / "Seized By" picker in the app), Support (Refresh / Wipe & Reload, notice numbers, reference data), Audit Log, LRT Offence Library (pin / reorder pinned offences, categories incl. Impaired Driving), CVIR Defect Library |
 
 **Paperwork (19 types)** – each with its sections, sub-screens, blue/grey/red completion bars, *Review to Submit* validation, supervisor approval where required, and a "what happens next" confirmation:
 
@@ -40,7 +40,7 @@ Common paperwork features: CARD events, occurrence date/time wheels (with the *D
 
 **SAM** – map with Officers, Bail and WTA layers (status-coloured bail pins, clusters, filters for priority / curfew / crime type, WTA issued-date filter), bail and warrant drawers, nearby list with search, route, *Action Bail* (5K prompt) and *Action 2W* deep links into OnDuty with the ◀ SAM breadcrumb and "Today" tab.
 
-**Demo controls** – toggle *Offline* (airplane mode; queries and submissions queue, then process when back online) and *Reset demo data* from the side panel or *More › Settings*.
+**Demo controls** (side panel, or *More › Settings*) – toggle *Offline* (airplane mode; queries and submissions queue, then process when back online); *Load sample data* to wipe the browser and load a fictional account, roster, persons/vehicles/locations and in-progress cases so you can explore every screen (login `d.user@police.demo` / `demo1234`, an Admin account); *Erase all data* to wipe everything back to the empty starting state.
 
 ## Code layout
 
@@ -62,4 +62,4 @@ js/app.js           home screen, screen directory, demo controls, boot
 
 ## Note on scope
 
-This started from a public user-guide PDF, not from New Zealand Police's real systems, and it never will be connected to them. There's deliberately no real authentication and no real officer-registration/identity system here – the passcode lock and the Officers roster are both cosmetic/local-only demo features, kept honestly labelled as such, so that this stays a recreation and never becomes something that could be mistaken for the genuine operational tool.
+This started from a public user-guide PDF, not from New Zealand Police's real systems, and it never will be connected to them. The login, accounts and Admin/Officer roles are a genuine (if simple) local feature – an email/password check and a roster you manage yourself – but they are still entirely local to your own browser: there's no server, no real credential, and no identity check against any real Police or government system. Nothing here verifies who anyone actually is, and it should never be mistaken for the genuine operational tool or used as if it were one.
