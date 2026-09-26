@@ -15,41 +15,6 @@
   };
   OD.screens._missing = { title: 'Not found', body: (p, ctx) => U.empty(`Unknown screen “${esc(ctx.e.s)}”`) };
 
-  /* ------------------------------------------------------------ lock screen
-     A cosmetic "unlock your work phone" screen shown once per page load, for
-     realism only. It is NOT real security: any 4-digit code (or the Face ID
-     icon) unlocks it, nothing is verified against anything, and it gates
-     nothing except this demo's own springboard. */
-  const lockRoot = () => document.getElementById('lock-root');
-  let lockDigits = '';
-  const renderLock = () => {
-    const root = lockRoot(); if (!root) return;
-    const d = new Date();
-    const date = d.toLocaleDateString('en-NZ', { weekday: 'long', day: 'numeric', month: 'long' });
-    const dots = Array.from({ length: 4 }, (_, i) => `<span class="lk-dot ${i < lockDigits.length ? 'on' : ''}"></span>`).join('');
-    const key = (n, cls = '') => `<button class="lk-key ${cls}" data-lk="${n}">${n}</button>`;
-    root.innerHTML = `<div class="lockscreen"><div class="lk-time">${F.hm(d)}</div><div class="lk-date">${esc(date)}</div><div class="lk-badge"><img src="assets/icon-onduty.svg" alt="">Police iPhone (demo)</div><div class="lk-title">Enter Passcode</div><div class="lk-sub">This is a cosmetic demo lock screen for realism – it isn't real security.</div><div class="lk-dots">${dots}</div><div class="lk-pad">${key(1)}${key(2)}${key(3)}${key(4)}${key(5)}${key(6)}${key(7)}${key(8)}${key(9)}<button class="lk-key lk-sub-k" data-lk="skip">SKIP</button>${key(0)}<button class="lk-key lk-sub-k" data-lk="del">⌫</button></div><div class="lk-hint">Demo mode: any 4-digit code unlocks it, or tap SKIP. This recreation has no real login and is not connected to any Police system.</div></div>`;
-  };
-  const unlock = () => {
-    const root = lockRoot(); if (!root) return;
-    const ls = root.querySelector('.lockscreen'); if (ls) ls.style.cssText = 'transition:opacity .25s;opacity:0;pointer-events:none';
-    setTimeout(() => { root.innerHTML = ''; }, 260);
-  };
-  OD.showLock = () => {
-    lockDigits = '';
-    renderLock();
-    const root = lockRoot();
-    root.onclick = (ev) => {
-      const b = ev.target.closest('[data-lk]'); if (!b) return;
-      const v = b.dataset.lk;
-      if (v === 'skip') return unlock();
-      if (v === 'del') { lockDigits = lockDigits.slice(0, -1); return renderLock(); }
-      if (lockDigits.length >= 4) return;
-      lockDigits += v; renderLock();
-      if (lockDigits.length === 4) setTimeout(unlock, 220);
-    };
-  };
-
   /* ------------------------------------------------------------ demo state */
   OD.setOffline = (v) => {
     OD.db.offline = !!v;
@@ -216,15 +181,12 @@
       if (!o.passHash) o.passHash = OD.simpleHash('changeme');
       delete o.me;
     });
-    if (!OD.db.session && OD.db.me.qid && OD.db.officers.some((o) => o.qid === OD.db.me.qid)) OD.db.session = OD.db.me.qid; // keep a browser that was already "signed in" as such
     OD.saveNow();
     OD.boot();
-    OD.showLock();
     renderDirectory(); OD.onRoute();
     document.getElementById('pc-filter').addEventListener('input', renderDirectory);
     const cb = document.getElementById('pc-offline'); cb.checked = !!OD.db.offline; cb.addEventListener('change', () => OD.setOffline(cb.checked));
     document.getElementById('pc-home').addEventListener('click', () => N.homeScreen());
-    document.getElementById('pc-lock').addEventListener('click', () => OD.showLock());
     document.getElementById('pc-sample').addEventListener('click', () => { if (confirm('Erase everything currently stored in this browser and load fictional sample data (accounts, persons, vehicles, cases) so you can explore every screen?')) OD.loadSample(); });
     document.getElementById('pc-reset').addEventListener('click', () => { if (confirm('Erase all accounts, paperwork and settings stored in this browser? This cannot be undone.')) OD.resetDemo(); });
     document.getElementById('directory').addEventListener('click', (e) => { if (e.target.closest('a') && window.innerWidth <= 760) document.getElementById('panel').classList.remove('open'); });

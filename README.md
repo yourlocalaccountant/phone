@@ -17,7 +17,7 @@ Every screen has its own URL (`#/od/<tab>/<screen>,<params>/…`), so the browse
 
 ## What's included
 
-**Phone shell** – home screen with *OnDuty*, *OnDuty Edu* (Education build, pink icon + banner) and *SAM*; iOS status bar; tap the home bar to go back to the home screen; a cosmetic **passcode lock screen** appears on every page load (any 4-digit code, or the SKIP button, unlocks it – for realism only, it is not real security and gates nothing outside this demo). Opening *OnDuty* or *SAM* for the first time asks you to create an **account** (name, email, password – the first account becomes an Admin); after that it's a normal email/password log in, stored only in this browser. Log out again from *More › Settings*.
+**Phone shell** – home screen with *OnDuty*, *OnDuty Edu* (Education build, pink icon + banner) and *SAM*; iOS status bar; tap the home bar to go back to the home screen. Opening *OnDuty* or *SAM* asks you to create an **account** (name, email, password – the first account becomes an Admin); after that it's a normal email/password log in, stored only in this browser. Log out again from *More › Settings*.
 
 **OnDuty tabs**
 
