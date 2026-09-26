@@ -93,26 +93,11 @@
   ];
 
   /* -------------------------------------------------------------- officers */
-  // Fictional sample roster, only ever loaded via Settings > "Load sample
-  // data" (never on by default – see OD.seed below). The real, editable
-  // roster (accounts created via login / More > Officers) lives in
-  // OD.db.officers; every name/QID/password here is invented demo data.
+  // The roster (accounts created via login / More > Officers) lives entirely
+  // in OD.db.officers - there is no seeded/fake officer here.
   L.ranks = ['Constable', 'Senior Constable', 'Sergeant', 'Senior Sergeant', 'Inspector', 'Senior Inspector', 'Detective', 'Detective Sergeant', 'Detective Senior Sergeant', 'Superintendent'];
-  const SAMPLE_PASS = OD.simpleHash('demo1234');
-  D.officers = [
-    { qid: 'ABCD01', name: 'Constable D. User', rank: 'Constable', email: 'd.user@police.demo', role: 'Admin' },
-    { qid: 'TTT123', name: 'Sergeant T. Taylor', rank: 'Sergeant', email: 't.taylor@police.demo', role: 'Officer' },
-    { qid: 'ABC012', name: 'Constable A. Brown', rank: 'Constable', email: 'a.brown@police.demo', role: 'Officer' },
-    { qid: 'ABC021', name: 'Constable R. Ngata', rank: 'Constable', email: 'r.ngata@police.demo', role: 'Officer' },
-    { qid: 'KWCA02', name: 'Sergeant K. Walker', rank: 'Sergeant', email: 'k.walker@police.demo', role: 'Officer' },
-    { qid: 'DHC142', name: 'Detective H. Chen', rank: 'Detective', email: 'h.chen@police.demo', role: 'Officer' },
-    { qid: 'MPL310', name: 'Constable M. Patel', rank: 'Constable', email: 'm.patel@police.demo', role: 'Officer' },
-    { qid: 'JRS220', name: 'Senior Sergeant J. Ross', rank: 'Senior Sergeant', email: 'j.ross@police.demo', role: 'Officer' },
-    { qid: 'LKT445', name: 'Constable L. Kaur', rank: 'Constable', email: 'l.kaur@police.demo', role: 'Officer' },
-  ].map((o) => ({ station: 'Wellington Central', passHash: SAMPLE_PASS, ...o }));
-  // Dynamic option providers – always read the *current* roster (seed + any
-  // officers registered in this browser), so newly registered officers show
-  // up in every supervisor / QID picker immediately.
+  // Dynamic option providers – always read the *current* roster, so newly
+  // registered officers show up in every supervisor / QID picker immediately.
   OD.optProviders.supervisors = () => OD.db.officers.filter((o) => /Sergeant|Inspector|Superintendent/.test(o.rank)).map((o) => `${o.qid} - ${o.name}`);
   OD.optProviders.officerQids = () => OD.db.officers.map((o) => `${o.qid} - ${o.name}`);
   OD.isAdmin = () => !!OD.db && OD.officer(OD.db.session)?.role === 'Admin';
@@ -354,144 +339,12 @@
     { id: 'S10', name: 'Hutt Valley Budget Service', type: 'Family Wellbeing', area: 'Wellington - Hutt Valley Area', summary: 'Free financial mentoring for whānau.', cond: 'None.' },
   ];
 
-  /* -------------------------------------------------------------- CARD events */
-  D.cardEvents = [
-    { no: 'P012345678', code: '5F', addr: '123 BLUE STREET, THORNDON, WELLINGTON', loc: 'L1', mins: 42 },
-    { no: 'P123456789', code: '1C', addr: 'MOLESWORTH STREET, THORNDON, WELLINGTON CITY', loc: 'L2', mins: 75 },
-    { no: 'P012345699', code: '1V', addr: 'JACKSON STREET, PETONE, LOWER HUTT', loc: 'L5', mins: 130 },
-    { no: 'P012345710', code: '3T', addr: 'PAREMATA HAYWARDS ROAD, WHITBY, PORIRUA', loc: 'L4', mins: 190 },
-  ];
-
-  /* ------------------------------------------------------------ seed records */
-  const alertNames = {
-    SAFETY: ['Uses or Carries Knife / Other Weapon', 'Violent Towards Police', 'Mental Health - Risk to Self'],
-    ACTION: ['Breaches Police Bail', 'Locate and Advise', 'Arrest - Warrant to Arrest'],
-    FLAGS: ['Drug User', 'Photo Driver Licence Card Cancelled', 'Gang Associate'],
-    PLANS: ['Family Violence Involvement', 'Safety Plan in Place'],
-    ORDERS: ['Protection Order - Respondent', 'Trespass Notice'],
-  };
-  const mkAlerts = (cats, seed) => {
-    const r = OD.rng('al' + seed); const out = [];
-    cats.forEach((c) => { const pool = alertNames[c] || []; const n = c === 'FLAGS' ? 2 : 1; for (let i = 0; i < n && i < pool.length; i++) out.push({ cat: c, t: pool[(i + Math.floor(r() * pool.length)) % pool.length], n: 1 + Math.floor(r() * 3), start: F.dmy('20' + (15 + Math.floor(r() * 7)) + '-0' + (1 + Math.floor(r() * 9)) + '-1' + Math.floor(r() * 9)) }); });
-    return out;
-  };
-  D.mkAlerts = mkAlerts;
-
-  const P = (id, sn, gn, g, dob, prn, addr, alerts, extra = {}) => ({ id, sn, gn, g, dob, prn, addr, alerts, addrType: 'Home Address', dl: 'DL' + prn.slice(2), nzta: true, ...extra });
-  const seedPersons = () => {
-    const ps = [
-      P('P1', 'WILLIAMS', 'TIM STEPHEN', 'Male', '2001-04-13', 'AB123456', '123 Blue Street, Thorndon, Wellington 6011', ['SAFETY', 'ACTION', 'FLAGS', 'PLANS', 'ORDERS'], { bail: ['B1', 'B2'], wta: 'W4', safvr: 'Moderate', phone: '021 123 456', height: '178cm', build: 'Medium', hair: 'Brown', eyes: 'Brown', eth: 'NZ European', interacted: true, awhiHistory: true }),
-      P('P2', 'WILLIAMS', 'TIM TIPENE', 'Male', '2001-04-13', 'AB123457', '123 Blue Street, Thorndon, Wellington 6011', ['FLAGS']),
-      P('P3', 'WILLIAMS', 'TIMOTHY', 'Male', '2001-04-13', 'AB123458', '123 Blue Street, Thorndon, Wellington 6011', ['ACTION', 'ORDERS']),
-      P('P4', 'WILLIAMS', 'TIMM STEVEN', 'Male', '1985-04-13', 'AA123456', '321 Blue Street, Thorndon, Wellington 6011', ['FLAGS']),
-      P('P5', 'WILLIAMS', 'KARA MIKA', 'Female', '1983-04-13', 'AA123459', '321 Blue Street, Thorndon, Wellington 6011', ['SAFETY', 'ACTION', 'FLAGS', 'PLANS', 'ORDERS'], { safvr: 'Low', vhs: 'High' }),
-      P('P6', 'WILLIAMS', 'ELLIE MIRANDA', 'Female', '2013-02-08', 'AA123460', '321 Blue Street, Thorndon, Wellington 6011', ['ACTION', 'FLAGS'], { safvr: 'Low' }),
-      P('P7', 'ABBOT', 'MICHAEL', 'Male', '1990-07-01', 'AC220011', '775 Green Road, Thorndon, Wellington 6011', ['SAFETY', 'ACTION', 'PLANS'], { wta: 'W1' }),
-      P('P8', 'JOYCE', 'FRANK', 'Male', '1978-12-17', 'AC220012', '341 Navy Place, Thorndon, Wellington 6011', ['SAFETY'], { wta: 'W2' }),
-      P('P9', 'SMITH', 'CARL', 'Male', '1995-03-09', 'AC220013', '789 Yellow Street, Thorndon, Wellington 6011', ['FLAGS'], { wta: 'W3' }),
-      P('P10', 'TAYLOR', 'JAMES ROBERT', 'Male', '1999-10-22', 'AD330021', '14 Harbour View Road, Kelburn, Wellington 6012', ['ACTION', 'FLAGS'], { bail: ['B3'] }),
-      P('P11', 'NGATA', 'RAWIRI', 'Male', '1992-05-30', 'AD330022', '8 Totara Lane, Newtown, Wellington 6021', ['PLANS'], { bail: ['B4'] }),
-      P('P12', 'KING', 'AROHA LEE', 'Female', '1997-01-11', 'AD330023', '52 Karaka Street, Mount Cook, Wellington 6021', ['SAFETY', 'FLAGS'], { bail: ['B5'] }),
-      P('P13', 'BROWN', 'LIAM JOSEPH', 'Male', '2003-08-19', 'AD330024', '9 Rimu Road, Aro Valley, Wellington 6021', ['ACTION'], { bail: ['B6'] }),
-      P('P14', 'SMITH', 'JOHN PAUL', 'Male', '1988-06-02', 'AE440031', '11 Kowhai Crescent, Porirua 5022', []),
-    ];
-    const out = {};
-    ps.forEach((p) => { p.alertList = mkAlerts(p.alerts, p.id); p.expired = 10 + (p.id.length * 7) % 35; out[p.id] = p; });
-    out.P1.alertList = [
-      { cat: 'SAFETY', t: 'Uses or Carries Knife / Other Weapon', n: 1, start: '12/03/2019' },
-      { cat: 'ACTION', t: 'Breaches Police Bail', n: 1, start: '02/02/2021' },
-      { cat: 'FLAGS', t: 'Drug User', n: 2, start: '19/11/2018' },
-      { cat: 'FLAGS', t: 'Photo Driver Licence Card Cancelled', n: 1, start: '05/05/2020' },
-      { cat: 'PLANS', t: 'Family Violence Involvement', n: 1, start: '14/08/2020' },
-      { cat: 'ORDERS', t: 'Protection Order - Respondent', n: 1, start: '30/09/2020' },
-    ];
-    out.P1.expired = 40;
-    out.P1.aliases = ['WILLIAMS, TIMOTHY STEPHEN', 'WILLIAMS, TIM'];
-    out.P1.marks = [{ type: 'Tattoo', loc: 'Left arm', desc: 'Koru design, black ink, approx 10cm' }, { type: 'Scar', loc: 'Face', desc: 'Small scar above right eyebrow' }];
-    return out;
-  };
-
-  const V = (id, rego, make, model, colour, body, extra = {}) => ({ id, rego, make, model, colour, body, vin: '123456789000', year: 2001, alerts: [], regExp: '2023-11-30', wofExp: '2023-06-05', ...extra });
-  const seedVehicles = () => {
-    const vs = [
-      V('V1', 'ABC123', 'Ford', 'Falcon AUIII XR6 4FA', 'Red', 'Hatchback Car', { hex: '#e8352d', alerts: ['SAFETY', 'ACTION', 'FLAGS', 'ORDERS'], owner: 'P1', year: 2001 }),
-      V('V2', 'ABC123', 'Mazda', 'Demio', 'White', 'Coupe Car', { hex: '#fff', outline: true, alerts: ['ACTION', 'ORDERS'], owner: 'P3', year: 2004 }),
-      V('V3', 'ABC123', '', '', '', 'Plate Only', { plateOnly: true, alerts: ['ACTION'] }),
-      V('V4', 'XR64FA', 'Holden', 'VX COMMODORE', 'Blue', 'Car/Wagon', { hex: '#2f6fd6', alerts: ['ORDERS'], owner: 'P1', year: 2001 }),
-      V('V5', 'LFT682', 'Toyota', 'Corolla', 'Silver', 'Sedan', { hex: '#b8bec6', owner: 'P14', year: 2012 }),
-      V('V6', 'KRA55', 'Nissan', 'Tiida', 'Grey', 'Hatchback Car', { hex: '#7d858f', owner: 'P5', year: 2009 }),
-    ];
-    return Object.fromEntries(vs.map((v) => [v.id, v]));
-  };
-
-  const Lc = (id, addr, type, alerts, x, y, extra = {}) => ({ id, addr, type, alerts, x, y, ...extra });
-  const seedLocations = () => {
-    const ls = [
-      Lc('L1', '123 BLUE STREET, THORNDON, WELLINGTON 6011', 'Residential', ['SAFETY', 'FLAGS'], 48, 44, { occupants: ['P1', 'P2', 'P3'], fh: 19 }),
-      Lc('L2', 'MOLESWORTH STREET, THORNDON, WELLINGTON CITY', 'Street', [], 55, 30),
-      Lc('L3', '42 MOLESWORTH STREET, THORNDON, WELLINGTON CITY 6011', 'Commercial', [], 58, 36),
-      Lc('L4', 'PAREMATA HAYWARDS ROAD, WHITBY, PORIRUA', 'Street', [], 20, 12),
-      Lc('L5', 'JACKSON STREET, PETONE, LOWER HUTT', 'Street', [], 80, 18),
-      Lc('L6', '321 BLUE STREET, THORNDON, WELLINGTON 6011', 'Residential', ['PLANS'], 42, 52, { occupants: ['P4', 'P5', 'P6'], fh: 4 }),
-      Lc('L7', '775 GREEN ROAD, THORNDON, WELLINGTON 6011', 'Residential', ['SAFETY'], 30, 62, { occupants: ['P7'] }),
-      Lc('L8', '341 NAVY PLACE, THORNDON, WELLINGTON 6011', 'Residential', [], 68, 58, { occupants: ['P8'] }),
-      Lc('L9', '789 YELLOW STREET, THORNDON, WELLINGTON 6011', 'Residential', ['FLAGS'], 36, 74, { occupants: ['P9'] }),
-      Lc('L10', 'LEVEL 9, 42 MOLESWORTH STREET, THORNDON, WELLINGTON CITY 6011', 'Commercial', [], 60, 34),
-      Lc('L11', 'THORNDON QUAY / MULGRAVE STREET INTERSECTION, WELLINGTON', 'Intersection', [], 72, 26),
-      Lc('L12', '14 HARBOUR VIEW ROAD, KELBURN, WELLINGTON 6012', 'Residential', [], 24, 40, { occupants: ['P10'] }),
-      Lc('L13', '8 TOTARA LANE, NEWTOWN, WELLINGTON 6021', 'Residential', [], 62, 80, { occupants: ['P11'] }),
-      Lc('L14', 'ST MARKS CHURCH, 2 WOODWARD STREET, WELLINGTON (demo)', 'Place of Worship', [], 50, 22),
-      Lc('L15', 'THORNDON SCHOOL (demo), 20 TURNBULL STREET, WELLINGTON', 'Education', [], 40, 18),
-    ];
-    return Object.fromEntries(ls.map((l) => [l.id, l]));
-  };
-
-  const seedOccurrences = (now) => {
-    const occ = [
-      { id: 'O1', no: '210531/2803', code: '1C', desc: 'Car/Person Acting Suspiciously', date: '31/05/2021 08:00:00', reported: '31/05/2021 08:01:00', channel: 'Phone', scene: 'Waitangirua', repStn: 'PNHQ', subject: 'Offence Report (OnDuty recorded)', loc: 'L1', recordId: '1234000065678', docloc: '123456/7890', card: 'P012345678', narrative: 'Created by ABCD01 25/06/2021 08:04\nInformant reported a male acting suspiciously near parked vehicles. Area searched with negative result.', assigned: '31/05/2021 - 13:34', unread: true, persons: ['P1'] },
-      { id: 'O2', no: '210210/1707', code: '1V', desc: 'Vehicle Collision', date: '10/02/2021 09:40:00', reported: '10/02/2021 09:45:00', channel: '111 Call', scene: 'Wellington Central', repStn: 'Wellington Central', subject: 'Traffic Crash Report (OnDuty recorded)', loc: 'L1', recordId: '1234000061234', docloc: '123456/7891', card: 'P012300001', narrative: 'Two vehicle non-injury crash. Details exchanged.', assigned: '10/02/2021 - 10:15', unread: true, persons: ['P1', 'P14'] },
-      { id: 'O3', no: '201105/0331', code: '4951', desc: 'Sell, transfer or make available false document and 1 other', date: '05/11/2020 19:10:00', reported: '05/11/2020 19:30:00', channel: 'Front Counter', scene: 'Wellington Central', repStn: 'Wellington Central', subject: 'False documents', loc: 'L1', recordId: '1234000059990', docloc: '123456/7892', card: 'P011100002', narrative: 'Complainant reports being sold a vehicle with a falsified registration document.', assigned: '05/11/2020 - 20:16', unread: true, persons: ['P3'] },
-      { id: 'O4', no: '220909/1200', code: '1Z', desc: 'Other Incident', date: '09/09/2022 12:00:00', reported: '09/09/2022 12:00:15', channel: 'Officer - discovered', scene: 'Wellington', repStn: 'Wellington', subject: 'General occurrence', loc: 'L1', recordId: '288100912345', docloc: '123456/7890', card: 'P000000123', narrative: '', persons: ['P1'] },
-    ];
-    const fh = ['220331/1128', '220112/2210', '211018/0405', '210722/1930', '210301/2255'].map((no, i) => ({ id: 'OF' + i, no, code: '5F', desc: 'Family Harm', date: `${no.slice(4, 6)}/${no.slice(2, 4)}/20${no.slice(0, 2)} ${no.slice(7, 9)}:${no.slice(9, 11)}:00`, reported: '', channel: '111 Call', scene: 'Wellington Central', repStn: 'Wellington Central', subject: 'Family Harm Investigation', loc: 'L1', recordId: '12340000' + (70000 + i), docloc: '1234' + (50 + i) + '/78' + (10 + i), card: 'P0123' + (40000 + i), narrative: 'Family harm episode at address. Parties spoken to separately. Safety plan completed.', fh: true, persons: ['P1', 'P5'] }));
-    return Object.fromEntries([...occ, ...fh].map((o) => [o.id, o]));
-  };
-
-  const seedBail = (now) => ({
-    B1: { id: 'B1', pid: 'P1', loc: 'L1', addr: '123 Blue Street, Thorndon, Wellington 6011', curfew: true, verified: true, lastCheck: now - 7 * DAY, status: 'grey', priority: true, conditions: ['Reside at 123 Blue Street, Thorndon, Wellington on MonTueWedThuFriSatSun', 'Curfew to remain at 123 Blue Street, Thorndon between the hours of 2100 and 0700 on MonTueWedThuFriSatSun and to present self at door if called upon by Police', 'Not to go or be found within 1K of the address of Walmart Wellington (demo)'], nextHearing: '10/06/2021 (278 days)', court: 'Christchurch', crime: 'Violence', station: 'Papanui', risk: 'High', x: 48, y: 44 },
-    B2: { id: 'B2', pid: 'P1', loc: 'L1', addr: '123 Blue Street, Thorndon, Wellington 6011', curfew: false, verified: true, lastCheck: null, status: 'black', conditions: ['Not to associate with any co-defendant', 'Report to Wellington Central Police Station every Monday'], nextHearing: '22/07/2021', court: 'Wellington', crime: 'Burglary', station: 'Wellington Central', risk: 'Medium', x: 48, y: 44, hidden: true },
-    B3: { id: 'B3', pid: 'P10', loc: 'L12', addr: '14 Harbour View Road, Kelburn, Wellington 6012', curfew: true, verified: true, lastCheck: now - 70 * MIN, status: 'green', conditions: ['Curfew to remain at 14 Harbour View Road between 2000 and 0600 daily', 'Not to consume alcohol'], nextHearing: '12/12/2022', court: 'Wellington', crime: 'Vehicle', station: 'Wellington Central', risk: 'Low', x: 24, y: 40 },
-    B4: { id: 'B4', pid: 'P11', loc: 'L13', addr: '8 Totara Lane, Newtown, Wellington 6021', curfew: false, verified: true, lastCheck: now - 20 * HOUR, status: 'lgrey', conditions: ['Reside at 8 Totara Lane, Newtown', 'Not to contact complainant'], nextHearing: '03/11/2022', court: 'Wellington', crime: 'Drugs', station: 'Newtown', risk: 'Medium', x: 62, y: 80 },
-    B5: { id: 'B5', pid: 'P12', loc: null, addr: '52 Karaka Street, Mount Cook, Wellington 6021', curfew: true, verified: false, lastCheck: now - 3 * HOUR, status: 'red', breach: true, conditions: ['Curfew to remain at 52 Karaka Street between 1900 and 0700 daily'], nextHearing: '28/10/2022', court: 'Wellington', crime: 'Burglary', station: 'Wellington Central', risk: 'High', x: 52, y: 66 },
-    B6: { id: 'B6', pid: 'P13', loc: null, addr: '9 Rimu Road, Aro Valley, Wellington 6021', curfew: false, verified: true, lastCheck: null, status: 'black', conditions: ['Reside at 9 Rimu Road, Aro Valley', 'Not to drive a motor vehicle'], nextHearing: '15/11/2022', court: 'Porirua', crime: 'Vehicle', station: 'Wellington Central', risk: 'Low', x: 30, y: 50 },
-  });
-  const seedWta = () => ({
-    W1: { id: 'W1', pid: 'P7', no: '8521608540', offence: '3521 - Failure To Answer District Court Bail', issued: '01/07/2022', court: 'Wellington District Court', contact: '+64 21 000 1111', x: 30, y: 62, comments: [{ by: 'DHC142', ts: '12/09/2022 - 09:10', text: 'Attended address, occupants advise he is working out of town.' }] },
-    W2: { id: 'W2', pid: 'P8', no: '8521608541', offence: '7191 - Failure To Answer District Court Bail', issued: '12/07/2022', court: 'Wellington District Court', contact: '+64 22 000 2222', x: 68, y: 58, comments: [] },
-    W3: { id: 'W3', pid: 'P9', no: '8521608542', offence: '3871 - Contravenes Protection Order', issued: '09/08/2022', court: 'Porirua District Court', contact: '+64 27 000 3333', x: 36, y: 74, comments: [] },
-    W4: { id: 'W4', pid: 'P1', no: '8521608543', offence: '7191 - Failure To Answer District Court Bail', issued: '29/04/2022 - 10:00', court: 'Auckland District Court', contact: '+64 210 9874654', x: 48, y: 44, comments: [{ by: 'DHC142', ts: '22/09/2022 - 12:09', text: 'HCTA will be back home tomorrow (9th Oct).' }] },
-  });
-
-  const seedTasks = (now) => {
-    const T = (id, district, title, type, dueIn, status, extra = {}) => ({ id, district, title, type, due: now + dueIn, status, by: 'TTT123', to: 'ABCD01', priority: 'Medium', file: '22' + id.slice(1).padStart(4, '0') + '/7' + id.slice(1), detail: '', actions: [], delegates: ['ABC012', 'MPL310'], attachments: ['Attachment 1.docx'], ...extra });
-    return Object.fromEntries([
-      T('T1', 'Southern', 'Serve summons - WILLIAMS, TIM STEPHEN', 'Summons Service', -5 * HOUR, 'In Progress', { priority: 'High', detail: 'Serve summons at the home address. If not located, leave a card and update the task with the time of attendance.', actions: [{ by: 'ABC012', ts: now - 30 * HOUR, text: 'Attended address 1930 hrs, no answer. Card left.', status: 'In Progress' }] }),
-      T('T2', 'Southern', 'Obtain statement from witness (demo)', 'Enquiry', 10 * HOUR, 'Not Started', { detail: 'Witness to the 1C event on Molesworth Street has called back and is available after 1600 hrs.' }),
-      T('T3', 'Southern', 'Canvass CCTV - Blue Street', 'Enquiry', 20 * HOUR, 'Not Started', { detail: 'Identify and request CCTV footage from premises on Blue Street between 0100 and 0400 hrs.', attachments: ['Area map.pdf', 'FLINT - Blue Street.pdf'] }),
-      T('T4', 'Southern', 'Bail check - TAYLOR, JAMES ROBERT', 'Bail Check', 3 * DAY, 'Not Started', { priority: 'Low', detail: 'Complete curfew check and record outcome in OnDuty Bail.' }),
-      T('T5', 'Southern', 'Return property to owner', 'Property', 5 * DAY, 'Awaiting Response', { priority: 'Low', detail: 'Contact owner to arrange return of found property (bicycle).', attachments: ['Photo 1.jpg'] }),
-      T('T6', 'Wellington', 'Follow up family harm referral', 'Family Harm', 26 * HOUR, 'Not Started', { detail: 'Confirm referral was received by service provider and update NIA.' }),
-      T('T7', 'Wellington', 'Locate and advise - SMITH, CARL', 'Locate', -26 * HOUR, 'In Progress', { priority: 'High', detail: 'Locate and advise of court date.' }),
-    ].map((t) => [t.id, t]));
-  };
-
   /* ---------------------------------------------------------------- seed
-     By default this produces a genuinely empty install: no officers, no
-     accounts, no cases – log in via the in-app login to create the first
-     (admin) account. Pass {sample:true} (only ever done via an explicit
-     "Load sample data" action) to additionally load the fictional roster
-     and case data below, for exploring every screen. */
-  OD.seed = (opts = {}) => {
+     A genuinely empty install: no officers, no accounts, no persons,
+     vehicles or cases. Log in via the in-app login to create the first
+     (admin) account, then add real persons/vehicles via CAD > Records –
+     nothing in this recreation is fabricated or pre-populated. */
+  OD.seed = () => {
     const now = Date.now();
     const db = {
       v: 1, offline: false, created: now,
@@ -518,53 +371,6 @@
       caseRead: {},
     };
     OD.db = db;
-    if (opts.sample) {
-      OD.seeding = true;
-      try {
-        Object.assign(db, {
-          settings: {
-            boundary: 'District', boundaryName: 'Wellington Central, Wellington', district: 'Wellington', scene: 'Wellington Central', reporting: 'Wellington Central',
-            supervisor: 'TTT123 - Sergeant T. Taylor', authOfficer: 'KWCA02 - Sergeant K. Walker', callSign: 'WN10',
-            vehicles: [
-              { id: 'pv1', rego: 'AAA111', type: 'Marked', speed: ['Laser', 'Speedo'], breath: [{ id: 'bd1', device: 'Drager 7510NZ', serial: '223456', cal: '2026-01-01' }] },
-              { id: 'pv2', rego: 'BBB222', type: 'Marked', speed: [], breath: [] },
-              { id: 'pv3', rego: 'CCC333', type: 'Marked', speed: ['Laser', 'Speedo'], breath: [] },
-              { id: 'pv4', rego: 'DDD444', type: 'Unmarked', speed: ['Laser'], breath: [] },
-              { id: 'pv5', rego: 'EEEFFF', type: 'Marked', speed: ['Laser'], breath: [] },
-            ],
-            defaultVehicle: 'pv1',
-          },
-          officers: OD.clone(D.officers),
-          persons: seedPersons(), vehicles: seedVehicles(), locations: seedLocations(), occurrences: seedOccurrences(now),
-          orgs: {
-            G1: { id: 'G1', name: 'BLUE STREET MOTORS LIMITED', cat: 'Business', type: 'Car dealer', addr: '12 Blue Street, Thorndon, Wellington 6011', alerts: [] },
-            G2: { id: 'G2', name: 'HARBOUR FREIGHT (DEMO) LTD', cat: 'Business', type: 'Transport operator', addr: '5 Wharf Road, Wellington 6011', alerts: ['FLAGS'], tsl: 'TSL123456' },
-            G3: { id: 'G3', name: 'ST MARKS CHURCH (DEMO)', cat: 'Other', type: 'Place of Worship', addr: '2 Woodward Street, Wellington', alerts: [] },
-            G4: { id: 'G4', name: 'THORNDON SCHOOL (DEMO)', cat: 'Other', type: 'School', addr: '20 Turnbull Street, Wellington', alerts: [] },
-            G5: { id: 'G5', name: 'CAPITAL PISTOL CLUB (DEMO)', cat: 'Club', type: 'Gun Club / Range', addr: '1 Range Road, Wellington', alerts: [] },
-          },
-          bail: seedBail(now), wta: seedWta(),
-          tasks: seedTasks(now), taskDistrict: 'Southern',
-          pinnedOffences: ['E975', 'E979', 'C101', 'L452', 'F201'],
-          cardEvents: OD.clone(D.cardEvents),
-          lastUsed: ['PoW', 'PoE', 'GCR'],
-          units: [
-            { id: 'u-wn10', callSign: 'WN10', type: 'Patrol Car', officers: ['ABCD01'], vehicle: 'AAA111', status: 'Available', incidentId: null, updated: now },
-            { id: 'u-wn22', callSign: 'WN22', type: 'Patrol Car', officers: ['TTT123'], vehicle: 'BBB222', status: 'En Route', incidentId: 'cad-1', updated: now - 6 * 60000 },
-            { id: 'u-pr51', callSign: 'PR51', type: 'Patrol Car', officers: ['ABC012', 'ABC021'], vehicle: 'CCC333', status: 'On Scene', incidentId: 'cad-1', updated: now - 2 * 60000 },
-            { id: 'u-hv30', callSign: 'HV30', type: 'Unmarked', officers: ['KWCA02'], vehicle: 'DDD444', status: 'Available', incidentId: null, updated: now },
-            { id: 'u-dog1', callSign: 'DOG1', type: 'Dog Unit', officers: ['DHC142'], vehicle: 'EEEFFF', status: 'Off Duty', incidentId: null, updated: now },
-          ],
-          cad: {
-            'cad-1': { id: 'cad-1', no: 'CAD' + String(now).slice(-6), type: '1V', typeDesc: '1V - Vehicle Collision', addr: 'JACKSON STREET, PETONE, LOWER HUTT', priority: 'P2 - Urgent', units: ['u-wn22', 'u-pr51'], cleared: false, created: now - 20 * 60000, notes: [{ by: 'TTT123', ts: now - 6 * 60000, text: 'Two vehicle non-injury crash, lanes partially blocked.' }] },
-            'cad-2': { id: 'cad-2', no: 'CAD' + String(now - 1).slice(-6), type: '5F', typeDesc: '5F - Family Harm', addr: '123 BLUE STREET, THORNDON, WELLINGTON 6011', priority: 'P1 - Immediate', units: [], cleared: false, created: now - 4 * 60000, notes: [] },
-          },
-        });
-        OD.seedActivity && OD.seedActivity(now);
-        const me = db.officers.find((o) => o.qid === 'ABCD01') || db.officers[0];
-        if (me) { db.session = me.qid; db.me = { qid: me.qid, name: me.name }; }
-      } finally { OD.seeding = false; }
-    }
     return db;
   };
 
@@ -589,16 +395,12 @@
     return '';
   };
 
-  /* ================================================================ GENERATORS */
-  const GN_M = ['TIM', 'TIMOTHY', 'TIMM', 'TAMA', 'TE RANGI', 'THOMAS', 'TOBY', 'TYLER', 'JAMES', 'JOHN', 'JACK', 'LIAM', 'NOAH', 'OLIVER', 'MANAIA', 'NIKO', 'SAM', 'RYAN', 'DANIEL', 'MICHAEL', 'WIREMU', 'HEMI', 'ARI', 'LUKE', 'BEN'];
-  const GN_F = ['TIA', 'TINA', 'TIANA', 'TAYLA', 'KARA', 'ELLIE', 'AROHA', 'MERE', 'SARAH', 'EMMA', 'OLIVIA', 'AMELIA', 'ISLA', 'CHARLOTTE', 'HANA', 'MAIA', 'GRACE', 'RUBY', 'ZOE', 'LILY'];
-  const MIDS = ['STEPHEN', 'TIPENE', 'JAMES', 'ROBERT', 'MICHAEL', 'JOHN', 'PAUL', 'ANDREW', 'MARIE', 'LEE', 'ROSE', 'ANNE', 'MIKA', 'KAHU', 'DAVID'];
-  const STREETS = ['Blue Street', 'Green Road', 'Navy Place', 'Yellow Street', 'Harbour View Road', 'Totara Lane', 'Karaka Street', 'Rimu Road', 'Kowhai Crescent', 'Matai Street', 'Pohutukawa Drive', 'Rata Street'];
-  const SUBURBS = [['Thorndon', 'Wellington', '6011'], ['Newtown', 'Wellington', '6021'], ['Kelburn', 'Wellington', '6012'], ['Porirua', 'Porirua', '5022'], ['Petone', 'Lower Hutt', '5012'], ['Johnsonville', 'Wellington', '6037'], ['Karori', 'Wellington', '6012']];
-  const randAddr = (r) => { const s = OD.pick(r, SUBURBS); return `${1 + Math.floor(r() * 400)} ${OD.pick(r, STREETS)}, ${s[0]}, ${s[1]} ${s[2]}`; };
-  const randDob = (r, age) => { const y = new Date().getFullYear() - (age ?? 16 + Math.floor(r() * 50)); return `${y}-${String(1 + Math.floor(r() * 12)).padStart(2, '0')}-${String(1 + Math.floor(r() * 28)).padStart(2, '0')}`; };
-  const randAlerts = (r) => ['SAFETY', 'ACTION', 'FLAGS', 'PLANS', 'ORDERS'].filter(() => r() > 0.65);
-  const hash = (s) => { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return Math.abs(h).toString(36); };
+  /* ================================================================ QUERIES
+     These search the real Person/Vehicle/Location/Organisation/Item records
+     that exist in this browser (added via CAD > Records, or the "create
+     new" option inside paperwork) – nothing is fabricated. A search with no
+     match returns zero results, same as a real query that finds nothing. */
+  OD.colourHex = { Red: '#e8352d', Blue: '#2f6fd6', White: '#fff', Silver: '#b8bec6', Black: '#2a2a2a', Grey: '#7d858f', Green: '#2f8f4e', Yellow: '#f2c230', Maroon: '#7a1f2b', Gold: '#c9a13b' };
 
   OD.gen = {};
   OD.gen.parseName = (raw) => {
@@ -619,35 +421,15 @@
     if (idLike) {
       const t = text.toUpperCase();
       const hit = Object.values(db.persons).find((p) => p.prn === t || p.dl === t);
-      if (hit) return { ids: [hit.id], total: 1 };
-      const r = OD.rng('id' + t);
-      const g = r() > 0.5 ? 'Male' : 'Female';
-      const id = 'G' + hash(t);
-      if (!db.persons[id]) db.persons[id] = { id, sn: OD.pick(r, ['SMITH', 'NGATA', 'BROWN', 'TAYLOR', 'KING', 'WILSON']), gn: OD.pick(r, g === 'Male' ? GN_M : GN_F) + ' ' + OD.pick(r, MIDS), g, dob: randDob(r), prn: /^[A-Z]{2}\d{6}$/.test(t) ? t : 'AF' + t.slice(-6).padStart(6, '0'), addr: randAddr(r), addrType: 'Home Address', alerts: randAlerts(r), dl: 'DL' + t.slice(-6).padStart(6, '0'), nzta: true, gen: true };
-      const p = db.persons[id]; p.alertList = D.mkAlerts(p.alerts, id); p.expired = Math.floor(r() * 20);
-      return { ids: [id], total: 1 };
+      return hit ? { ids: [hit.id], total: 1 } : { ids: [], total: 0 };
     }
     const { sn, gn } = OD.gen.parseName(text);
+    if (!sn) return { ids: [], total: 0 };
     const age = c.age && /^\d{1,3}$/.test(c.age) ? +c.age : null;
     const gender = c.gender === 'Male' || c.gender === 'Female' ? c.gender : null;
-    const match = (p) => p.sn.startsWith(sn) && (!gn || p.gn.split(' ').some((x) => x.startsWith(gn.split(' ')[0])) || p.gn.startsWith(gn)) && (!gender || p.g === gender);
-    const existing = Object.values(db.persons).filter((p) => !p.gen && match(p));
-    const r = OD.rng('qp' + sn + gn + (age || '') + (gender || ''));
-    const total = Math.max(existing.length, sn ? 5 + Math.floor(r() * 36) : 0);
-    const ids = existing.sort((a, b) => (age ? Math.abs(F.age(a.dob) - age) - Math.abs(F.age(b.dob) - age) : 0)).map((p) => p.id);
-    for (let i = ids.length; i < Math.min(total, 60); i++) {
-      const g = gender || (r() > 0.4 ? 'Male' : 'Female');
-      const pool = (g === 'Male' ? GN_M : GN_F).filter((n) => !gn || n.startsWith(gn.split(' ')[0].slice(0, 2)));
-      const first = gn ? (r() > 0.5 && pool.length ? OD.pick(r, pool) : gn.split(' ')[0]) : OD.pick(r, g === 'Male' ? GN_M : GN_F);
-      const id = 'G' + hash(sn + gn + i + (age || '') + (gender || ''));
-      if (!db.persons[id]) {
-        const a = age ? Math.max(12, age + Math.floor(r() * 7) - 3) : undefined;
-        db.persons[id] = { id, sn, gn: `${first} ${OD.pick(r, MIDS)}`, g, dob: randDob(r, a), prn: 'A' + String.fromCharCode(65 + Math.floor(r() * 26)) + String(100000 + Math.floor(r() * 899999)), addr: randAddr(r), addrType: 'Home Address', alerts: randAlerts(r), nzta: r() > 0.3, gen: true };
-        const p = db.persons[id]; p.dl = 'DL' + p.prn.slice(2); p.alertList = D.mkAlerts(p.alerts, id); p.expired = Math.floor(r() * 30);
-      }
-      ids.push(id);
-    }
-    return { ids, total };
+    const match = (p) => p.sn.startsWith(sn) && (!gn || p.gn.split(' ').some((x) => x.startsWith(gn.split(' ')[0])) || p.gn.startsWith(gn)) && (!gender || p.g === gender) && (!age || Math.abs(F.age(p.dob) - age) <= 3);
+    const ids = Object.values(db.persons).filter(match).sort((a, b) => (age ? Math.abs(F.age(a.dob) - age) - Math.abs(F.age(b.dob) - age) : 0)).map((p) => p.id);
+    return { ids, total: ids.length };
   };
   /** Vehicle query */
   OD.gen.qv = (c) => {
@@ -657,29 +439,11 @@
     const field = { REGNO: 'rego', VIN: 'vin', 'Chassis No': 'chassis', 'Engine No': 'engine' }[c.by || 'REGNO'] || 'rego';
     if (t.includes('*')) {
       const re = new RegExp('^' + t.replace(/\*/g, '.*') + '$');
-      const r = OD.rng('wild' + t + (c.make || '') + (c.colour || ''));
       const ids = Object.values(db.vehicles).filter((v) => re.test(v[field] || '')).map((v) => v.id);
-      const n = 3 + Math.floor(r() * 5);
-      for (let i = 0; i < n; i++) {
-        const rego = t.replace(/\*/g, () => String.fromCharCode(65 + Math.floor(r() * 26)));
-        const id = 'GV' + hash(t + i);
-        if (!db.vehicles[id]) db.vehicles[id] = mkVehicle(id, rego, r, c);
-        ids.push(id);
-      }
       return { ids, total: ids.length };
     }
     const hits = Object.values(db.vehicles).filter((v) => (v[field] || '') === t);
-    if (hits.length) return { ids: hits.map((v) => v.id), total: hits.length };
-    const id = 'GV' + hash(field + t);
-    if (!db.vehicles[id]) { const v = mkVehicle(id, field === 'rego' ? t : 'GEN' + t.slice(-3), OD.rng('v' + t), c); if (field !== 'rego') v[field] = t; db.vehicles[id] = v; }
-    return { ids: [id], total: 1 };
-  };
-  const HEX = { Red: '#e8352d', Blue: '#2f6fd6', White: '#fff', Silver: '#b8bec6', Black: '#2a2a2a', Grey: '#7d858f', Green: '#2f8f4e', Yellow: '#f2c230', Maroon: '#7a1f2b', Gold: '#c9a13b' };
-  const mkVehicle = (id, rego, r, c = {}) => {
-    const make = c.make || OD.pick(r, L.makes);
-    const colour = c.colour || OD.pick(r, Object.keys(HEX));
-    const models = { Toyota: ['Corolla', 'Hilux', 'RAV4', 'Aqua'], Holden: ['Commodore', 'Colorado', 'Barina'], Ford: ['Falcon', 'Ranger', 'Focus'], Mazda: ['Demio', 'Axela', 'CX-5'], Nissan: ['Tiida', 'Navara', 'Leaf'], Honda: ['Fit', 'Civic', 'Odyssey'], Mitsubishi: ['Outlander', 'Triton', 'Lancer'], Subaru: ['Legacy', 'Impreza', 'Forester'], Suzuki: ['Swift', 'Vitara'], Hyundai: ['Tucson', 'i30'], Kia: ['Sportage', 'Rio'], Volkswagen: ['Golf', 'Polo', 'Amarok'] };
-    return { id, rego, make, model: OD.pick(r, models[make] || ['Sedan']), colour, hex: HEX[colour], outline: colour === 'White', body: c.type || OD.pick(r, ['Sedan', 'Hatchback Car', 'Station Wagon', 'Utility', 'SUV']), year: 1998 + Math.floor(r() * 24), vin: 'JT' + String(Math.floor(r() * 1e12)).padStart(12, '0'), alerts: randAlerts(r).slice(0, 2), regExp: F.iso(new Date(Date.now() + (r() - 0.3) * 300 * DAY)), wofExp: F.iso(new Date(Date.now() + (r() - 0.3) * 300 * DAY)), gen: true };
+    return { ids: hits.map((v) => v.id), total: hits.length };
   };
   /** Location query */
   OD.gen.ql = (c) => {
@@ -688,37 +452,22 @@
     const q = t.toUpperCase().trim();
     if (!q) return { ids: [], total: 0 };
     const words = q.split(/[\s,/]+/).filter(Boolean);
-    const hits = Object.values(db.locations).filter((l) => words.every((w) => l.addr.includes(w)));
-    if (hits.length) return { ids: hits.map((l) => l.id), total: hits.length };
-    const r = OD.rng('l' + q);
-    const n = 1 + Math.floor(r() * 3);
-    const ids = [];
-    for (let i = 0; i < n; i++) {
-      const id = 'GL' + hash(q + i);
-      const s = OD.pick(r, SUBURBS);
-      if (!db.locations[id]) db.locations[id] = { id, addr: (/^\d/.test(q) ? q : `${i ? (i * 7 + 3) + ' ' : ''}${q}`) + `, ${s[0].toUpperCase()}, ${s[1].toUpperCase()} ${s[2]}`, type: c.st1 ? 'Intersection' : 'Residential', alerts: r() > 0.7 ? ['FLAGS'] : [], x: 10 + r() * 80, y: 10 + r() * 80, gen: true };
-      ids.push(id);
-    }
+    const ids = Object.values(db.locations).filter((l) => words.every((w) => l.addr.includes(w))).map((l) => l.id);
     return { ids, total: ids.length };
   };
   OD.gen.qo = (c) => {
     const db = OD.db; const q = String(c.name || '').toUpperCase().trim();
     if (!q) return { ids: [], total: 0 };
-    const hits = Object.values(db.orgs).filter((o) => o.name.includes(q) || o.tsl === q);
-    if (hits.length) return { ids: hits.map((o) => o.id), total: hits.length };
-    const r = OD.rng('o' + q); const ids = [];
-    ['LIMITED', 'TRUST', 'HOLDINGS LTD'].slice(0, 1 + Math.floor(r() * 3)).forEach((suf, i) => { const id = 'GO' + hash(q + i); if (!db.orgs[id]) db.orgs[id] = { id, name: `${q} ${suf}`, cat: c.cat || 'Business', type: c.type || 'Company', addr: randAddr(r), alerts: r() > 0.7 ? ['FLAGS'] : [], gen: true }; ids.push(id); });
+    const ids = Object.values(db.orgs).filter((o) => o.name.includes(q) || o.tsl === q).map((o) => o.id);
     return { ids, total: ids.length };
   };
   OD.gen.qi = (c) => {
     const db = OD.db; const q = String(c.ident || '').toUpperCase().trim();
     if (!q) return { ids: [], total: 0 };
-    const id = 'GI' + hash(q + (c.cat || ''));
-    const r = OD.rng('i' + q);
-    if (!db.items[id]) db.items[id] = { id, ident: q, cat: c.cat || 'Other', desc: { Firearm: 'Rifle, bolt action (demo)', 'Electronic Device': 'Mobile phone, black (demo)', Bicycle: 'Mountain bike, red (demo)', Jewellery: 'Gold ring (demo)' }[c.cat] || 'Item (demo)', status: r() > 0.6 ? 'Reported Stolen' : 'No record of interest', stolenDate: F.dmy(F.iso(new Date(Date.now() - r() * 200 * DAY))), occ: r() > 0.6 ? 'O3' : null, gen: true };
-    return { ids: [id], total: 1 };
+    const ids = Object.values(db.items).filter((i) => i.ident === q).map((i) => i.id);
+    return { ids, total: ids.length };
   };
 
-  /** Nearby locations for current GPS (fixed demo position) */
-  OD.nearby = () => ['L3', 'L10', 'L2', 'L1', 'L11', 'L6'].map((id) => OD.db.locations[id]).filter(Boolean);
+  /** Nearby locations for current GPS – real locations only, may be empty */
+  OD.nearby = () => Object.values(OD.db.locations).slice(0, 6);
 })();

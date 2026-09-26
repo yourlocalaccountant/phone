@@ -71,7 +71,7 @@
       h += '<div class="sh">REASON</div>' + qSeg('reason', ['3T', '4Q', '3B', 'MOB', 'Other'], d.reason);
       if (d.reason === 'Other') h += fld('reasonText', 'OTHER REASON', d.reasonText, {});
       h += '<div class="sh">LOCATION</div>' + qSeg('locMode', ['Use Current Location', 'Select Location'], d.locMode);
-      h += d.locMode === 'Select Location' ? `<div class="field pick" data-go="${OD.go('picker', { t: 'tmp:qv', k: 'loc', o: 'x:addresses', title: 'Select Location', search: 1 })}"><div class="pv ${d.loc ? '' : 'ph'}">${esc(d.loc || 'Select recent / nearby location')}</div></div>` : `<div class="para grey" style="font-size:13.5px">${esc(OD.nearby()[0].addr)}</div>`;
+      h += d.locMode === 'Select Location' ? `<div class="field pick" data-go="${OD.go('picker', { t: 'tmp:qv', k: 'loc', o: 'x:addresses', title: 'Select Location', search: 1 })}"><div class="pv ${d.loc ? '' : 'ph'}">${esc(d.loc || 'Select recent / nearby location')}</div></div>` : `<div class="para grey" style="font-size:13.5px">${esc(OD.nearby()[0]?.addr || 'No location data available – add one via CAD or select a location')}</div>`;
       return h + runBtns('QV') + '<div class="footnote">The reason defaults to 3T. If 3T is selected, a 3T event is logged in CAD (if you are logged into Responder/CAD) and an updated GPS location is sent to Comms when you run the query. A wildcard (*) can be entered in the regno.</div>';
     },
   });

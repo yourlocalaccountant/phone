@@ -128,7 +128,8 @@
     ] });
   });
   action('cardLocQuery', (d) => {
-    const f = FD.get(d.a); const ce = OD.db.cardEvents.find((c) => c.no === f.card); const loc = OD.location(ce.loc);
+    const f = FD.get(d.a); const ce = OD.db.cardEvents.find((c) => c.no === f.card); const loc = ce && OD.location(ce.loc);
+    if (!loc) return;
     const q = OD.runQuery('QL', { quick: loc.addr.split(',').slice(0, 2).join(' ') }, { folder: f.id });
     if (q.status === 'done') N.push('qres', { q: q.id }); else OD.ui.toast('Query queued (offline)');
   });

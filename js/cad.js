@@ -25,8 +25,8 @@
   const incidentRow = (c) => `<div class="row" data-go="${OD.go('cad-incident', { id: c.id })}"><span class="pill ${priCode(c.priority)}" style="margin-right:10px">${esc(priCode(c.priority))}</span><div class="grow"><div class="kv-k">${esc(c.typeDesc)}</div><div class="kv-v">${esc(c.addr)}</div><div class="kv-v" style="font-size:12px">${esc(c.no)} · ${c.cleared ? 'Cleared' : c.units.length ? `${c.units.length} unit${c.units.length > 1 ? 's' : ''} assigned` : 'Awaiting dispatch'}</div></div><span class="chev">${I.chev}</span></div>`;
 
   /* ==================================================================== board */
-  screen('cad', {
-    title: 'CAD',
+  screen('dispatch', {
+    title: 'Dispatch',
     right: () => (OD.isAdmin() ? '<button class="nb" data-go="cad-new-incident">+ Incident</button>' : ''),
     body: () => {
       const mine = myUnits();
@@ -39,7 +39,7 @@
         + (cleared.length ? `${U.sh('CLEARED')}<div class="group">${cleared.map(incidentRow).join('')}</div>` : '')
         + `${U.sh(`UNITS (${units.length})`)}<div class="group">${units.length ? units.map(unitRow).join('') : U.empty('No units registered')}</div>`
         + (OD.isAdmin() ? '<div class="row add" data-go="cad-new-unit">+ Register Unit</div>' : '')
-        + '<div class="footnote">A fictional, local-only dispatch board – units and incidents here are demo data kept only in this browser and are not connected to any real Police or emergency dispatch system.</div>';
+        + '<div class="footnote">A fictional, local-only dispatch board – nothing here is connected to any real Police or emergency dispatch system.</div>';
     },
   });
 
@@ -190,5 +190,91 @@
     if (OD.db.units.some((u) => u.callSign === callSign)) return OD.ui.toast('A unit with that call sign already exists');
     OD.db.units.push({ id: OD.uid('unit'), callSign, type: x.type || 'Patrol Car', officers: x.officers || [], vehicle: x.vehicle || '', status: 'Available', incidentId: null, updated: Date.now() });
     OD.tmp.cadunitnew = {}; OD.save(); N.pop(); OD.ui.toast(`${callSign} registered`);
+  });
+
+  /* ================================================================= RECORDS
+     Register real persons and vehicles into this browser's NIA data (the
+     same OD.db.persons/OD.db.vehicles used by Query Person / Query Vehicle
+     in OnDuty) – there is no seeded or generated data anywhere in this
+     recreation, so this is how records get in. */
+  screen('records', {
+    title: 'Records',
+    body: () => {
+      const persons = Object.values(OD.db.persons);
+      const vehicles = Object.values(OD.db.vehicles);
+      return '<div class="gap"></div><div class="group"><div class="row add" data-go="records-new-person">+ Add Person</div><div class="row add" data-go="records-new-vehicle">+ Add Vehicle</div></div>'
+        + `${U.sh(`PERSONS (${persons.length})`)}<div class="group">${persons.length ? persons.map((p) => OD.personCard(p, { go: OD.go('person', { id: p.id }) })).join('') : U.empty('No persons added yet')}</div>`
+        + `${U.sh(`VEHICLES (${vehicles.length})`)}<div class="group">${vehicles.length ? vehicles.map((v) => OD.vehicleCard(v, { go: OD.go('vehicle', { id: v.id }) })).join('') : U.empty('No vehicles added yet')}</div>`
+        + '<div class="footnote">Persons and vehicles added here become searchable via Query Person / Query Vehicle in OnDuty. Stored only in this browser.</div>';
+    },
+  });
+
+  OD.forms['records-person'] = {
+    fields: [
+      { h: 'PERSON DETAILS' },
+      { t: 'sn', l: 'Surname', req: 1, upper: 1 },
+      { t: 'gn', l: 'Given Name(s)', req: 1, upper: 1 },
+      { seg: 'g', l: 'Gender', o: ['Male', 'Female'] },
+      { dt: 'dob', l: 'Date of Birth', time: false, req: 1 },
+      { h: 'CONTACT' },
+      { t: 'addr', l: 'Address', req: 1 },
+      { t: 'phone', l: 'Phone Number', opt: 1, kb: 'tel' },
+      { h: 'IDENTIFIERS (OPTIONAL)' },
+      { t: 'prn', l: 'PRN', opt: 1, upper: 1, ph: 'Leave blank to auto-generate' },
+      { t: 'dl', l: 'Driver Licence Number', opt: 1, upper: 1 },
+      { note: 'Adds a real person record to this browser’s NIA data. Stored only here – not sent anywhere.' },
+    ],
+  };
+  screen('records-new-person', {
+    title: 'Add Person',
+    target: () => OD.resolve('tmp:recperson'),
+    body: () => {
+      const d = OD.resolve('tmp:recperson');
+      if (!d._loaded) Object.assign(d, { g: 'Male', _loaded: true });
+      return OD.renderFields(OD.forms['records-person'].fields, d, { ref: 'tmp:recperson', fid: 'records-person', pw: null, reviewed: d._reviewed }) + '<button class="bigbtn" data-act="recordsSavePerson">Add Person</button>';
+    },
+  });
+  action('recordsSavePerson', (d, el, ctx) => {
+    const x = OD.resolve('tmp:recperson');
+    if (!x.sn || !x.gn || !x.dob || !x.addr) { x._reviewed = true; OD.save(); N.refresh(ctx.u); return OD.ui.toast('Surname, given name(s), date of birth and address are required'); }
+    const id = OD.uid('P');
+    let prn = x.prn ? x.prn.toUpperCase() : '';
+    if (!prn) prn = 'A' + String.fromCharCode(65 + Math.floor(Math.random() * 26)) + String(100000 + Math.floor(Math.random() * 899999));
+    if (Object.values(OD.db.persons).some((p) => p.prn === prn)) return OD.ui.toast('A person with that PRN already exists');
+    OD.db.persons[id] = { id, sn: x.sn.toUpperCase(), gn: x.gn.toUpperCase(), g: x.g || 'Male', dob: x.dob, prn, addr: x.addr, addrType: 'Home Address', phone: x.phone || '', dl: x.dl ? x.dl.toUpperCase() : '', alerts: [], alertList: [], expired: 0, nzta: !!x.dl };
+    OD.tmp.recperson = {}; OD.save(); N.pop(); OD.ui.toast(`${OD.fullName(OD.db.persons[id])} added`);
+  });
+
+  OD.forms['records-vehicle'] = {
+    fields: [
+      { h: 'VEHICLE DETAILS' },
+      { t: 'rego', l: 'Registration Plate', req: 1, upper: 1 },
+      { pk: 'make', l: 'Make', o: 'makes' },
+      { t: 'model', l: 'Model', opt: 1 },
+      { pk: 'colour', l: 'Colour', o: 'colours' },
+      { pk: 'body', l: 'Body Type', o: ['Sedan', 'Hatchback Car', 'Station Wagon', 'Utility', 'SUV', 'Van', 'Truck', 'Motorcycle'] },
+      { h: 'IDENTIFIERS (OPTIONAL)' },
+      { t: 'vin', l: 'VIN', opt: 1, upper: 1 },
+      { note: 'Adds a real vehicle record to this browser’s NIA data. Stored only here – not sent anywhere.' },
+    ],
+  };
+  screen('records-new-vehicle', {
+    title: 'Add Vehicle',
+    target: () => OD.resolve('tmp:recvehicle'),
+    body: () => {
+      const d = OD.resolve('tmp:recvehicle');
+      if (!d._loaded) Object.assign(d, { body: 'Sedan', _loaded: true });
+      return OD.renderFields(OD.forms['records-vehicle'].fields, d, { ref: 'tmp:recvehicle', fid: 'records-vehicle', pw: null, reviewed: d._reviewed }) + '<button class="bigbtn" data-act="recordsSaveVehicle">Add Vehicle</button>';
+    },
+  });
+  action('recordsSaveVehicle', (d, el, ctx) => {
+    const x = OD.resolve('tmp:recvehicle');
+    if (!x.rego) { x._reviewed = true; OD.save(); N.refresh(ctx.u); return OD.ui.toast('Registration plate is required'); }
+    const rego = x.rego.toUpperCase().replace(/\s+/g, '');
+    if (Object.values(OD.db.vehicles).some((v) => v.rego === rego)) return OD.ui.toast('A vehicle with that registration already exists');
+    const id = OD.uid('V');
+    const colour = x.colour || '';
+    OD.db.vehicles[id] = { id, rego, make: x.make || '', model: x.model || '', colour, hex: OD.colourHex[colour] || '#8a8a8f', outline: colour === 'White', body: x.body || 'Sedan', vin: x.vin ? x.vin.toUpperCase() : '', year: new Date().getFullYear(), alerts: [], regExp: '', wofExp: '' };
+    OD.tmp.recvehicle = {}; OD.save(); N.pop(); OD.ui.toast(`${rego} added`);
   });
 })();

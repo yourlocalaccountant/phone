@@ -30,7 +30,6 @@
     OD.ui.toast(v ? 'Offline – no coverage (queries will be queued)' : 'Back online');
   };
   OD.resetDemo = () => { OD.wipe(); OD.tmp = {}; OD.seed(); OD.saveNow(); location.hash = '#/'; location.reload(); };
-  OD.loadSample = () => { OD.wipe(); OD.tmp = {}; OD.seed({ sample: true }); OD.saveNow(); location.hash = '#/'; location.reload(); };
 
   /* ------------------------------------------------------------ in-app login
      A cosmetic email/password gate in front of the OnDuty/SAM apps: accounts

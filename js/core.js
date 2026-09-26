@@ -162,16 +162,18 @@
 
   /* ================================================================ ROUTER */
   const TABS = ['home', 'tasks', 'paperwork', 'assigned', 'more'];
+  const CAD_TABS = ['dispatch', 'records'];
   const N = (OD.nav = {});
   const st = (N.st = {
     app: 'sb', edu: false, tab: 'home',
     stacks: { home: [], tasks: [], paperwork: [], assigned: [], more: [] },
-    modals: [], sam: [], cad: [], fromSam: false,
+    modals: [], sam: [], fromSam: false,
+    cadTab: 'dispatch', cadStacks: { dispatch: [], records: [] },
   });
   const entry = (s, p = {}) => ({ s, p: Object.fromEntries(Object.entries(p).filter(([, v]) => v !== undefined && v !== null && v !== '').map(([k, v]) => [k, String(v)])), u: OD.uid('e') });
   N.entry = entry;
-  const ensureRoots = () => { TABS.forEach((t) => { if (!st.stacks[t].length) st.stacks[t].push(entry(t)); }); if (!st.sam.length) st.sam.push(entry('sam')); if (!st.cad.length) st.cad.push(entry('cad')); };
-  const layers = (N.layers = () => (st.app === 'od' ? [st.stacks[st.tab], ...st.modals] : st.app === 'sam' ? [st.sam] : st.app === 'cad' ? [st.cad] : []));
+  const ensureRoots = () => { TABS.forEach((t) => { if (!st.stacks[t].length) st.stacks[t].push(entry(t)); }); if (!st.sam.length) st.sam.push(entry('sam')); CAD_TABS.forEach((t) => { if (!st.cadStacks[t].length) st.cadStacks[t].push(entry(t)); }); };
+  const layers = (N.layers = () => (st.app === 'od' ? [st.stacks[st.tab], ...st.modals] : st.app === 'sam' ? [st.sam] : st.app === 'cad' ? [st.cadStacks[st.cadTab]] : []));
   N.top = () => { const L = layers(); const l = L[L.length - 1]; return l ? l[l.length - 1] : null; };
 
   // --- hash (de)serialisation --------------------------------------------
@@ -181,14 +183,14 @@
   N.hashFor = (app, tab, stack, modals = []) => {
     const E = (arr) => arr.map(([s, p]) => encE({ s, p: p || {} })).join('/');
     if (app === 'sam') return '#/sam/' + E(stack);
-    if (app === 'cad') return '#/cad/' + E(stack);
+    if (app === 'cad') return '#/cad/' + tab + '/' + E(stack);
     if (app === 'sb') return '#/';
     return '#/' + app + '/' + tab + '/' + [E(stack), ...modals.map(E)].join('/~/');
   };
   N.toHash = () => {
     if (st.app === 'od') return '#/' + (st.edu ? 'edu' : 'od') + '/' + st.tab + '/' + [st.stacks[st.tab].map(encE).join('/'), ...st.modals.map((m) => m.map(encE).join('/'))].join('/~/');
     if (st.app === 'sam') return '#/sam/' + st.sam.map(encE).join('/');
-    if (st.app === 'cad') return '#/cad/' + st.cad.map(encE).join('/');
+    if (st.app === 'cad') return '#/cad/' + st.cadTab + '/' + st.cadStacks[st.cadTab].map(encE).join('/');
     return '#/';
   };
   const parseHash = (h) => {
@@ -196,7 +198,12 @@
     if (!parts.length) return { app: 'sb' };
     const a = parts.shift();
     if (a === 'sam') return { app: 'sam', sam: parts.map(decE) };
-    if (a === 'cad') return { app: 'cad', cad: parts.map(decE) };
+    if (a === 'cad') {
+      const tab = CAD_TABS.includes(parts[0]) ? parts.shift() : 'dispatch';
+      const stack = parts.map(decE);
+      if (!stack.length || stack[0].s !== tab) stack.unshift({ s: tab, p: {} });
+      return { app: 'cad', tab, cadStack: stack };
+    }
     if (a === 'od' || a === 'edu') {
       const tab = TABS.includes(parts[0]) ? parts.shift() : 'home';
       const groups = [[]];
@@ -226,7 +233,7 @@
       st.stacks[P.tab] = reuse(st.stacks[P.tab], P.stack);
       st.modals = P.modals.map((m, i) => reuse(st.modals[i] || [], m));
     } else if (P.app === 'sam') { ensureRoots(); st.sam = reuse(st.sam, P.sam.length ? P.sam : [{ s: 'sam', p: {} }]); }
-    else if (P.app === 'cad') { ensureRoots(); st.cad = reuse(st.cad, P.cad.length ? P.cad : [{ s: 'cad', p: {} }]); }
+    else if (P.app === 'cad') { ensureRoots(); st.cadTab = P.tab; st.cadStacks[P.tab] = reuse(st.cadStacks[P.tab], P.cadStack); }
     if (anim === undefined) {
       const newL = layers().map((l) => l.map((e) => e.u));
       anim = 'none';
@@ -268,6 +275,10 @@
   N.dismiss = (all) => { if (!st.modals.length) return; if (all) st.modals.length = 0; else st.modals.pop(); commit('dismiss'); };
   N.replaceModal = (s, p) => { if (!st.modals.length) return N.present(s, p); st.modals[st.modals.length - 1] = [entry(s, p)]; commit('none'); };
   N.tab = (t) => {
+    if (st.app === 'cad') {
+      if (st.cadTab === t) { if (st.cadStacks[t].length > 1) { st.cadStacks[t].length = 1; commit('pop'); } else { const el = screenEls.get(st.cadStacks[t][0].u); el && el.querySelector('.content')?.scrollTo({ top: 0, behavior: 'smooth' }); } return; }
+      st.cadTab = t; commit('none'); return;
+    }
     if (st.tab === t && !st.modals.length) { if (st.stacks[t].length > 1) { st.stacks[t].length = 1; commit('pop'); } else { const el = screenEls.get(st.stacks[t][0].u); el && el.querySelector('.content')?.scrollTo({ top: 0, behavior: 'smooth' }); } return; }
     st.modals.length = 0; st.tab = t; commit('none');
   };
@@ -284,7 +295,7 @@
     ensureRoots(); st.app = app;
     if (app === 'od') { st.tab = tab; st.stacks[tab] = stack.map(([s, p]) => entry(s, p)); st.modals = modals.map((m) => m.map(([s, p]) => entry(s, p))); }
     if (app === 'sam') st.sam = stack.map(([s, p]) => entry(s, p));
-    if (app === 'cad') st.cad = stack.map(([s, p]) => entry(s, p));
+    if (app === 'cad') { st.cadTab = tab; st.cadStacks[tab] = stack.map(([s, p]) => entry(s, p)); }
     commit('none');
   };
 
@@ -321,7 +332,8 @@
     } else if (key === 'sam') {
       const l = document.createElement('div'); l.className = 'layer'; el.appendChild(l); c.tabs.main = l;
     } else if (key === 'cad') {
-      const l = document.createElement('div'); l.className = 'layer'; el.appendChild(l); c.tabs.main = l;
+      CAD_TABS.forEach((t) => { const l = document.createElement('div'); l.className = 'layer'; l.dataset.layerTab = t; el.appendChild(l); c.tabs[t] = l; });
+      const tb = document.createElement('div'); tb.className = 'tabbar'; el.appendChild(tb); c.cadTabbar = tb;
     } else if (key === 'sb') {
       const l = document.createElement('div'); l.className = 'layer'; el.appendChild(l); c.tabs.main = l;
     }
@@ -429,7 +441,10 @@
     } else if (key === 'sam') {
       syncLayer(c.tabs.main, st.sam, 0, anim);
     } else if (key === 'cad') {
-      syncLayer(c.tabs.main, st.cad, 0, anim);
+      CAD_TABS.forEach((t) => (c.tabs[t].style.display = t === st.cadTab ? '' : 'none'));
+      const cbase = st.cadStacks[st.cadTab];
+      syncLayer(c.tabs[st.cadTab], cbase, 0, anim);
+      renderCadTabbar(c, cbase.length === 1);
     } else if (key === 'od') {
       TABS.forEach((t) => (c.tabs[t].style.display = t === st.tab ? '' : 'none'));
       const base = st.stacks[st.tab];
@@ -462,6 +477,14 @@
     const badge = OD.paperworkBadge ? OD.paperworkBadge() : 0;
     const labels = { home: 'Home', tasks: 'Tasks', paperwork: 'Paperwork', assigned: 'Assigned', more: 'More' };
     tabbarEl.innerHTML = TABS.map((t) => `<button class="${st.tab === t ? 'on' : ''}" data-tab="${t}">${I.tabs[t]}<span>${labels[t]}</span>${t === 'paperwork' && badge ? `<span class="badge">${badge > 99 ? '99+' : badge}</span>` : ''}</button>`).join('');
+  };
+
+  const CAD_TAB_META = { dispatch: ['Dispatch', I.tabs.tasks], records: ['Records', I.tabs.paperwork] };
+  const renderCadTabbar = (c, show) => {
+    const tb = c.cadTabbar; if (!tb) return;
+    tb.classList.toggle('hidden', !show);
+    if (!show) return;
+    tb.innerHTML = CAD_TABS.map((t) => `<button class="${st.cadTab === t ? 'on' : ''}" data-tab="${t}">${CAD_TAB_META[t][1]}<span>${CAD_TAB_META[t][0]}</span></button>`).join('');
   };
 
   /** Re-render the screen that contains element/ctx (or the current top screen) */

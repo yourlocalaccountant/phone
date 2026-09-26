@@ -2,7 +2,7 @@
 
 An interactive, click-through recreation of the NZ Police **OnDuty** iPhone app (and its companion **SAM** map app), rebuilt in plain HTML/CSS/JavaScript from the screenshots and procedures in the publicly released OIA response **IR-01-23-16062** ("OnDuty" user guides, June 2023).
 
-> **Unofficial demo.** This project is not affiliated with or endorsed by New Zealand Police, and is not connected to any real Police system. No police crest or logo is used. Nothing is sent over the network – all state (including any account you create) lives in the browser's `localStorage`. It starts completely empty; open **More › Settings** to load fictional sample data instead, if you'd rather explore every screen pre-populated.
+> **Unofficial demo.** This project is not affiliated with or endorsed by New Zealand Police, and is not connected to any real Police system. No police crest or logo is used. Nothing is sent over the network – all state (including any account you create) lives in the browser's `localStorage`. It starts completely empty and stays that way until you put something in it: create your own accounts, and add persons/vehicles via **CAD › Records**. Nothing in this recreation is seeded, fabricated or auto-generated – a search that finds nothing just says so.
 
 ## Run it
 
@@ -40,9 +40,16 @@ Common paperwork features: CARD events, occurrence date/time wheels (with the *D
 
 **SAM** – map with Officers, Bail and WTA layers (status-coloured bail pins, clusters, filters for priority / curfew / crime type, WTA issued-date filter), bail and warrant drawers, nearby list with search, route, *Action Bail* (5K prompt) and *Action 2W* deep links into OnDuty with the ◀ SAM breadcrumb and "Today" tab.
 
-**CAD** – a fictional, local-only computer-aided dispatch board: a queue of incidents (type, address, priority, notes) and a roster of dispatch units (call sign, type, crew, vehicle, status). *Admin* accounts create incidents, register units and assign/dispatch a unit to an incident; any logged-in officer who's crew on a unit can update that unit's own status (Available / Dispatched / En Route / On Scene / Busy / Off Duty) – setting it back to Available clears it from its incident. Clearing an incident (Admin) frees all its units. Not connected to any real Police or emergency dispatch system.
+**CAD** – a fictional, local-only computer-aided dispatch app with two tabs:
 
-**Demo controls** (*More › Settings*) – toggle *Offline* (airplane mode; queries and submissions queue, then process when back online); *Load sample data* to wipe the browser and load a fictional account, roster, persons/vehicles/locations, CAD units/incidents and in-progress cases so you can explore every screen (login `d.user@police.demo` / `demo1234`, an Admin account); *Erase all data* to wipe everything back to the empty starting state.
+| Tab | Screens |
+| --- | --- |
+| Dispatch | Incident queue (type, address, priority, notes) and a unit roster (call sign, type, crew, vehicle, status). *Admin* accounts create incidents, register units and assign/dispatch a unit to an incident; any logged-in officer who's crew on a unit can update that unit's own status (Available / Dispatched / En Route / On Scene / Busy / Off Duty) – setting it back to Available clears it from its incident. Clearing an incident (Admin) frees all its units. |
+| Records | Add Person / Add Vehicle – the only way persons and vehicles get into this recreation. Records added here are the same `OD.db.persons`/`OD.db.vehicles` that Query Person / Query Vehicle in OnDuty search, so anything you add is immediately queryable there. |
+
+Not connected to any real Police or emergency dispatch system.
+
+**Demo controls** (*More › Settings*) – toggle *Offline* (airplane mode; queries and submissions queue, then process when back online); *Erase all data* to wipe everything in this browser back to the empty starting state (you'll need to create a new account afterwards).
 
 ## Code layout
 
@@ -51,15 +58,15 @@ wrangler.jsonc       Cloudflare Workers Static Assets config (serves this folder
 index.html          phone frame
 css/app.css         iOS-style UI, frame, SAM, CAD, responsive rules
 js/core.js          helpers, icons, avatars, storage, router (hash ⇄ nav stacks incl. sam/cad), overlays, gestures
-js/data.js          option lists, offence libraries, fictional records, query generators
+js/data.js          option lists, offence/legislation libraries, real-record queries (no fabrication)
 js/forms.js         declarative form engine, picker, person/vehicle cards
 js/paperwork.js     paperwork engine, folders, Take Action, selectors, offence libraries, review/submit
-js/pw-types.js      the 19 paperwork definitions + seed activity
+js/pw-types.js      the 19 paperwork definitions
 js/screens-home.js  Home tab, filter, folders
 js/screens-query.js queries, results, summaries, maps, crash diagram, external agencies
 js/screens-tabs.js  Tasks, Assigned, More, AWHI service picker
 js/sam.js           SAM map app
-js/cad.js           CAD dispatch board (units + incidents)
+js/cad.js           CAD app (Dispatch: units + incidents; Records: add persons/vehicles)
 js/app.js           springboard, login gate, demo controls, boot
 ```
 

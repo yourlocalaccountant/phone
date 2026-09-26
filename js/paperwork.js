@@ -610,9 +610,9 @@
       const row = (l) => `<div class="row" data-act="selLoc" data-a="${l.id}"><div class="grow" style="font-size:13.5px">${esc(l.addr)}</div>${U.pills(l.alerts)}</div>`;
       let h = `<div class="searchbar"><label class="sbx">${I.search}<input data-local="q" data-enter="selLocSearch" placeholder="Search address – press return" value="${esc(ctx.e.q || '')}" autocomplete="off"></label></div>`;
       if (res.length) h += '<div class="sh">SEARCH RESULTS</div><div class="group">' + res.map((id) => row(OD.location(id))).join('') + '</div>';
-      h += `<div class="group"><div class="row link" data-act="selLoc" data-a="${OD.nearby()[0].id}">Use Current Location (GPS)</div><div class="row link" data-go="${OD.go('ql-map', { mode: 'pick', id: p.id, k: p.k })}">Show map of nearby locations<span class="chev">${I.chev}</span></div></div>`;
+      h += `<div class="group">${OD.nearby()[0] ? `<div class="row link" data-act="selLoc" data-a="${OD.nearby()[0].id}">Use Current Location (GPS)</div>` : ''}<div class="row link" data-go="${OD.go('ql-map', { mode: 'pick', id: p.id, k: p.k })}">Show map of nearby locations<span class="chev">${I.chev}</span></div></div>`;
       if (fLocs.length) h += '<div class="sh">LOCATIONS IN FOLDER</div><div class="group">' + [...new Set(fLocs)].map((id) => OD.location(id)).filter(Boolean).map(row).join('') + '</div>';
-      h += '<div class="sh">NEARBY LOCATIONS</div><div class="group">' + OD.nearby().map(row).join('') + '</div>';
+      if (OD.nearby().length) h += '<div class="sh">NEARBY LOCATIONS</div><div class="group">' + OD.nearby().map(row).join('') + '</div>';
       if (recent.length) h += '<div class="sh">RECENT LOCATIONS</div><div class="group">' + [...new Set(recent)].map((id) => OD.location(id)).filter(Boolean).map(row).join('') + '</div>';
       return h;
     },
