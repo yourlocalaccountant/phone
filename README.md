@@ -2,7 +2,7 @@
 
 An interactive, click-through recreation of the NZ Police **OnDuty** iPhone app (and its companion **SAM** map app), rebuilt in plain HTML/CSS/JavaScript from the screenshots and procedures in the publicly released OIA response **IR-01-23-16062** ("OnDuty" user guides, June 2023).
 
-> **Unofficial demo.** This project is not affiliated with or endorsed by New Zealand Police, and is not connected to any real Police system. No police crest or logo is used. Nothing is sent over the network – all state (including any account you create) lives in the browser's `localStorage`. It starts completely empty; open **More › Settings** (or the side panel) to load fictional sample data instead, if you'd rather explore every screen pre-populated.
+> **Unofficial demo.** This project is not affiliated with or endorsed by New Zealand Police, and is not connected to any real Police system. No police crest or logo is used. Nothing is sent over the network – all state (including any account you create) lives in the browser's `localStorage`. It starts completely empty; open **More › Settings** to load fictional sample data instead, if you'd rather explore every screen pre-populated.
 
 ## Run it
 
@@ -11,13 +11,13 @@ No build step and no dependencies.
 * **Open `index.html`** directly in a browser, **or**
 * serve the folder, e.g. `php -S localhost:8000` or `npx serve .`, then open <http://localhost:8000>.
 
-On a desktop the app is shown inside an iPhone frame with a **screen directory** on the left that deep-links to every screen. On a phone-sized screen it runs full-screen; tap the small tab on the left edge to open the directory.
+On a desktop the app is shown centred inside an iPhone frame. On a phone-sized screen it runs full-screen.
 
-Every screen has its own URL (`#/od/<tab>/<screen>,<params>/…`), so the browser back/forward buttons, bookmarks and refresh all work.
+Every screen has its own URL (`#/od/<tab>/<screen>,<params>/…`, `#/sam/…`, `#/cad/…`), so the browser back/forward buttons, bookmarks and refresh all work.
 
 ## What's included
 
-**Phone shell** – home screen with *OnDuty*, *OnDuty Edu* (Education build, pink icon + banner) and *SAM*; iOS status bar; tap the home bar to go back to the home screen. Opening *OnDuty* or *SAM* asks you to create an **account** (name, email, password – the first account becomes an Admin); after that it's a normal email/password log in, stored only in this browser. Log out again from *More › Settings*.
+**Phone shell** – home screen with *OnDuty*, *OnDuty Edu* (Education build, pink icon + banner), *SAM* and *CAD*; iOS status bar; tap the home bar to go back to the home screen. Opening *OnDuty*, *SAM* or *CAD* asks you to create an **account** (name, email, password – the first account becomes an Admin); after that it's a normal email/password log in, stored only in this browser. Log out again from *More › Settings*.
 
 **OnDuty tabs**
 
@@ -40,15 +40,17 @@ Common paperwork features: CARD events, occurrence date/time wheels (with the *D
 
 **SAM** – map with Officers, Bail and WTA layers (status-coloured bail pins, clusters, filters for priority / curfew / crime type, WTA issued-date filter), bail and warrant drawers, nearby list with search, route, *Action Bail* (5K prompt) and *Action 2W* deep links into OnDuty with the ◀ SAM breadcrumb and "Today" tab.
 
-**Demo controls** (side panel, or *More › Settings*) – toggle *Offline* (airplane mode; queries and submissions queue, then process when back online); *Load sample data* to wipe the browser and load a fictional account, roster, persons/vehicles/locations and in-progress cases so you can explore every screen (login `d.user@police.demo` / `demo1234`, an Admin account); *Erase all data* to wipe everything back to the empty starting state.
+**CAD** – a fictional, local-only computer-aided dispatch board: a queue of incidents (type, address, priority, notes) and a roster of dispatch units (call sign, type, crew, vehicle, status). *Admin* accounts create incidents, register units and assign/dispatch a unit to an incident; any logged-in officer who's crew on a unit can update that unit's own status (Available / Dispatched / En Route / On Scene / Busy / Off Duty) – setting it back to Available clears it from its incident. Clearing an incident (Admin) frees all its units. Not connected to any real Police or emergency dispatch system.
+
+**Demo controls** (*More › Settings*) – toggle *Offline* (airplane mode; queries and submissions queue, then process when back online); *Load sample data* to wipe the browser and load a fictional account, roster, persons/vehicles/locations, CAD units/incidents and in-progress cases so you can explore every screen (login `d.user@police.demo` / `demo1234`, an Admin account); *Erase all data* to wipe everything back to the empty starting state.
 
 ## Code layout
 
 ```
 wrangler.jsonc       Cloudflare Workers Static Assets config (serves this folder as-is; no build step, no server code)
-index.html          phone frame + side panel
-css/app.css         iOS-style UI, frame, SAM, responsive rules
-js/core.js          helpers, icons, avatars, storage, router (hash ⇄ nav stacks), overlays, gestures
+index.html          phone frame
+css/app.css         iOS-style UI, frame, SAM, CAD, responsive rules
+js/core.js          helpers, icons, avatars, storage, router (hash ⇄ nav stacks incl. sam/cad), overlays, gestures
 js/data.js          option lists, offence libraries, fictional records, query generators
 js/forms.js         declarative form engine, picker, person/vehicle cards
 js/paperwork.js     paperwork engine, folders, Take Action, selectors, offence libraries, review/submit
@@ -57,7 +59,8 @@ js/screens-home.js  Home tab, filter, folders
 js/screens-query.js queries, results, summaries, maps, crash diagram, external agencies
 js/screens-tabs.js  Tasks, Assigned, More, AWHI service picker
 js/sam.js           SAM map app
-js/app.js           home screen, screen directory, demo controls, boot
+js/cad.js           CAD dispatch board (units + incidents)
+js/app.js           springboard, login gate, demo controls, boot
 ```
 
 ## Note on scope

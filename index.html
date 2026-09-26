@@ -10,27 +10,6 @@
 </head>
 <body>
 <div id="stage">
-  <aside id="panel">
-    <div class="panel-head">
-      <img src="assets/icon-onduty.svg" alt="" class="panel-icon">
-      <div>
-        <h1>OnDuty</h1>
-        <p>Interactive browser recreation</p>
-      </div>
-    </div>
-    <p class="panel-note">Unofficial mock-up rebuilt from the publicly released OIA document IR-01-23-16062. Not NZ Police software and not connected to any real Police system – nothing is sent anywhere, state is kept in this browser only. Starts empty; log in / create an account to use it, or load fictional sample data below to explore every screen.</p>
-    <div class="panel-controls">
-      <label class="pc-toggle"><input type="checkbox" id="pc-offline"> <span>Offline (airplane mode)</span></label>
-      <div class="pc-row">
-        <button id="pc-home" type="button">Home screen</button>
-        <button id="pc-sample" type="button">Load sample data</button>
-        <button id="pc-reset" type="button">Erase all data</button>
-      </div>
-      <div class="pc-route">Route: <code id="pc-route">/</code></div>
-    </div>
-    <input id="pc-filter" type="search" placeholder="Filter screens…" autocomplete="off">
-    <nav id="directory"></nav>
-  </aside>
   <main id="device-wrap">
     <div id="device">
       <div id="screen-area">
@@ -44,7 +23,6 @@
       <div class="notch"></div>
     </div>
   </main>
-  <button id="dir-fab" type="button" aria-label="Screen directory">☰</button>
 </div>
 <script src="js/core.js"></script>
 <script src="js/data.js"></script>
@@ -55,6 +33,7 @@
 <script src="js/screens-query.js"></script>
 <script src="js/screens-tabs.js"></script>
 <script src="js/sam.js"></script>
+<script src="js/cad.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

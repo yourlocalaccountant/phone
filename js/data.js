@@ -72,6 +72,9 @@
   L.visitPurpose = ['Reassurance visit', 'Community engagement', 'Security advice', 'Incident follow-up', 'Event planning', 'Other'];
   L.visitMethod = ['In person', 'Phone', 'Email', 'Video call'];
   L.infNoteConditions = ['Dry', 'Wet', 'Road works', 'Night', 'Daylight', 'School zone'];
+  L.unitStatuses = ['Available', 'Dispatched', 'En Route', 'On Scene', 'Busy', 'Off Duty'];
+  L.cadPriorities = ['P1 - Immediate', 'P2 - Urgent', 'P3 - Routine', 'P4 - Non-urgent'];
+  L.unitTypes = ['Patrol Car', 'Unmarked', 'Dog Unit', 'Motorcycle', 'Public Order', 'Other'];
   L.intoxication = ['Sober', 'Influenced', 'Intoxicated'];
   L.alcoholFrom = ['Liquor store', 'Supermarket', 'Licensed premises', 'Private supply', 'Unknown'];
   L.listedDrugs = ['Cannabis (THC)', 'Cocaine', 'Methamphetamine', 'MDMA', 'Amphetamine', 'Ketamine', 'Morphine', 'Oxycodone', 'Clonazepam', 'Diazepam'];
@@ -321,6 +324,8 @@
   ];
   D.niaByCode = Object.fromEntries(D.nia.map((o) => [o.code, o]));
   D.niaCats = [...new Set(D.nia.map((o) => o.cat))];
+  // CAD incident types reuse the same operational incident categories used elsewhere in the demo (not themselves an offence)
+  L.cadTypes = D.nia.filter((o) => o.cat === 'admin').map((o) => `${o.code} - ${o.desc}`);
 
   /* ------------------------------------------------------ CVIR defect library */
   D.cvirCats = {
@@ -499,6 +504,7 @@
         defaultVehicle: null,
       },
       officers: [],
+      units: [], cad: {},
       persons: {}, vehicles: {}, locations: {}, occurrences: {},
       orgs: {},
       items: {},
@@ -542,6 +548,17 @@
           pinnedOffences: ['E975', 'E979', 'C101', 'L452', 'F201'],
           cardEvents: OD.clone(D.cardEvents),
           lastUsed: ['PoW', 'PoE', 'GCR'],
+          units: [
+            { id: 'u-wn10', callSign: 'WN10', type: 'Patrol Car', officers: ['ABCD01'], vehicle: 'AAA111', status: 'Available', incidentId: null, updated: now },
+            { id: 'u-wn22', callSign: 'WN22', type: 'Patrol Car', officers: ['TTT123'], vehicle: 'BBB222', status: 'En Route', incidentId: 'cad-1', updated: now - 6 * 60000 },
+            { id: 'u-pr51', callSign: 'PR51', type: 'Patrol Car', officers: ['ABC012', 'ABC021'], vehicle: 'CCC333', status: 'On Scene', incidentId: 'cad-1', updated: now - 2 * 60000 },
+            { id: 'u-hv30', callSign: 'HV30', type: 'Unmarked', officers: ['KWCA02'], vehicle: 'DDD444', status: 'Available', incidentId: null, updated: now },
+            { id: 'u-dog1', callSign: 'DOG1', type: 'Dog Unit', officers: ['DHC142'], vehicle: 'EEEFFF', status: 'Off Duty', incidentId: null, updated: now },
+          ],
+          cad: {
+            'cad-1': { id: 'cad-1', no: 'CAD' + String(now).slice(-6), type: '1V', typeDesc: '1V - Vehicle Collision', addr: 'JACKSON STREET, PETONE, LOWER HUTT', priority: 'P2 - Urgent', units: ['u-wn22', 'u-pr51'], cleared: false, created: now - 20 * 60000, notes: [{ by: 'TTT123', ts: now - 6 * 60000, text: 'Two vehicle non-injury crash, lanes partially blocked.' }] },
+            'cad-2': { id: 'cad-2', no: 'CAD' + String(now - 1).slice(-6), type: '5F', typeDesc: '5F - Family Harm', addr: '123 BLUE STREET, THORNDON, WELLINGTON 6011', priority: 'P1 - Immediate', units: [], cleared: false, created: now - 4 * 60000, notes: [] },
+          },
         });
         OD.seedActivity && OD.seedActivity(now);
         const me = db.officers.find((o) => o.qid === 'ABCD01') || db.officers[0];
