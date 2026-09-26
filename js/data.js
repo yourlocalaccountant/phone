@@ -6,6 +6,7 @@
   'use strict';
   const OD = window.OD, F = OD.fmt;
   const D = (OD.data = {});
+  OD.optProviders = OD.optProviders || {}; // data.js loads before forms.js, which normally owns this
   const MIN = 60000, HOUR = 60 * MIN, DAY = 24 * HOUR;
 
   /* ------------------------------------------------------------ option lists */
@@ -89,6 +90,10 @@
   ];
 
   /* -------------------------------------------------------------- officers */
+  // Seed defaults only – the live, editable roster (including anyone registered
+  // through More > Officers) lives in OD.db.officers. Every name/QID here is
+  // invented demo data, same as everything else in this recreation.
+  L.ranks = ['Constable', 'Senior Constable', 'Sergeant', 'Senior Sergeant', 'Inspector', 'Senior Inspector', 'Detective', 'Detective Sergeant', 'Detective Senior Sergeant', 'Superintendent'];
   D.officers = [
     { qid: 'ABCD01', name: 'Constable D. User', rank: 'Constable', me: true },
     { qid: 'TTT123', name: 'Sergeant T. Taylor', rank: 'Sergeant' },
@@ -99,9 +104,12 @@
     { qid: 'MPL310', name: 'Constable M. Patel', rank: 'Constable' },
     { qid: 'JRS220', name: 'Senior Sergeant J. Ross', rank: 'Senior Sergeant' },
     { qid: 'LKT445', name: 'Constable L. Kaur', rank: 'Constable' },
-  ];
-  L.supervisors = D.officers.filter((o) => /Sergeant/.test(o.rank)).map((o) => `${o.qid} - ${o.name}`);
-  L.officerQids = D.officers.map((o) => `${o.qid} - ${o.name}`);
+  ].map((o) => ({ station: 'Wellington Central', ...o }));
+  // Dynamic option providers – always read the *current* roster (seed + any
+  // officers registered in this browser), so newly registered officers show
+  // up in every supervisor / QID picker immediately.
+  OD.optProviders.supervisors = () => OD.db.officers.filter((o) => /Sergeant|Inspector|Superintendent/.test(o.rank)).map((o) => `${o.qid} - ${o.name}`);
+  OD.optProviders.officerQids = () => OD.db.officers.map((o) => `${o.qid} - ${o.name}`);
 
   /* ------------------------------------------------------- LRT offence library */
   const O = (code, desc, cat, fee, extra = {}) => ({ code, desc, cat, fee, ...extra });
@@ -164,6 +172,42 @@
     O('S102', 'Vaped in a motor vehicle carrying a child occupant', 'Smoke/Vape in M/Vehicle', 50, { wtw: true }),
     O('W772', 'Breached 8.3(b) COVID-19 Public Health Response Order 2020', 'COVID-19', 300, { covid: true, wtw: true, text: 'PARTICIPATED IN A SOCIAL GATHERING AND FAILED TO COMPLY WITH CLAUSE 17 OF THE COVID-19 PUBLIC HEALTH RESPONSE ORDER' }),
     O('W775', 'Breached 15(2) COVID-19 Public Health Response (ALR) Order', 'COVID-19', 300, { covid: true, wtw: true, text: 'PERSON FAILED TO REMAIN AT CURRENT HOME / RESIDENCE OTHER THAN FOR ESSENTIAL PERSONAL MOVEMENT' }),
+    // ---- additional Speeding tiers ----
+    O('E971', 'EXCEEDED 20 KM/H POSTED SPEED LIMIT', 'Speeding', null, { speed: true, dem: 'Depends on speed' }),
+    O('E973', 'EXCEEDED 40 KM/H POSTED SPEED LIMIT', 'Speeding', null, { speed: true, dem: 'Depends on speed' }),
+    O('E981', 'EXCEEDED 110 KM/H POSTED SPEED LIMIT (MOTORWAY)', 'Speeding', null, { speed: true, dem: 'Depends on speed' }),
+    O('E990', 'EXCEEDED VARIABLE SPEED LIMIT AT ROADWORKS', 'Speeding', null, { speed: true, dem: 'Depends on speed', comp: true }),
+    // ---- additional Vehicle (registration / WOF / equipment) offences ----
+    O('C110', 'No Evidence of Current Vehicle Registration', 'Vehicle', 200, { comp: true }),
+    O('C130', 'Operated vehicle with a defective/inoperative headlamp', 'Vehicle', 150, { comp: true }),
+    O('C140', 'Operated vehicle with excessively tinted windscreen/front windows', 'Vehicle', 150, { comp: true }),
+    O('C150', 'Operated vehicle emitting excessive noise (modified exhaust)', 'Vehicle', 150),
+    O('C160', 'Number plate obscured or not clearly legible', 'Vehicle', 150, { comp: true }),
+    O('C170', 'Failed to affix warning flag/light to projecting load', 'Vehicle', 150),
+    O('L470', 'Failed to notify change of registered person within 7 days', 'Vehicle', 100),
+    // ---- additional Driver Licensing offences ----
+    O('D170', 'Restricted licence holder drove between 10pm and 5am unaccompanied', 'Driver Licensing', 100),
+    O('D180', 'Learner licence holder failed to display L plates', 'Driver Licensing', 100, { comp: true }),
+    O('D190', 'Breached zero alcohol licence condition (non-EBA)', 'Driver Licensing', 200),
+    // ---- additional Driving Offences ----
+    O('M301', 'Careless use of a motor vehicle', 'Driving Offences', 150, { dem: 35 }),
+    O('M310', 'Followed another vehicle too closely', 'Driving Offences', 150, { dem: 20 }),
+    O('M320', 'Failed to indicate when changing lanes/turning', 'Driving Offences', 150),
+    O('M330', 'Overtook on the left in breach of the rules', 'Driving Offences', 150, { dem: 35 }),
+    O('M340', 'Drove on the incorrect side of the road', 'Driving Offences', 150, { dem: 35 }),
+    O('M350', 'Opened a vehicle door carelessly / left it open so as to cause danger', 'Driving Offences', 150),
+    O('M360', 'Rider failed to wear an approved safety helmet', 'Driving Offences', 150, { comp: true }),
+    O('M370', 'Sounded a vehicle horn unnecessarily', 'Driving Offences', 55),
+    O('M380', 'Failed to comply with a lawful sign or road marking', 'Driving Offences', 150),
+    // ---- additional Intersection offences ----
+    O('F210', 'Failed to give way when turning', 'Intersection', 150, { dem: 20 }),
+    O('F220', 'Failed to stop at a pedestrian crossing', 'Intersection', 150, { dem: 20 }),
+    O('F310', 'Proceeded through a railway level crossing when prohibited', 'Intersection', 150, { dem: 35 }),
+    // ---- additional Alcohol (local alcohol ban / liquor ban) offences ----
+    O('W658', 'Supplied alcohol to a minor in an alcohol banned area', 'Alcohol', 250, { aion: true, wtw: true }),
+    // ---- additional Commercial Vehicle offences ----
+    O('V140', 'Exceeded permitted driving hours (work time)', 'Commercial Vehicle', 300),
+    O('V150', 'Logbook not maintained in accordance with the rules', 'Commercial Vehicle', 150),
   ];
   D.lrt.forEach((o) => {
     o.eff = '05/11/20 - Current';
@@ -175,43 +219,105 @@
   D.lrtByCode = Object.fromEntries(D.lrt.map((o) => [o.code, o]));
 
   /* ---------------------------------------------- NIA incident / offence codes */
-  const N = (code, desc, extra = {}) => ({ code, desc, ...extra });
+  // `leg` cites the real NZ Act (and, where reasonably well known, the section)
+  // that the offence sits under. Reference/demo content only – always confirm
+  // the current wording and section numbers against legislation.govt.nz before
+  // relying on it for anything real; several sections have been renumbered or
+  // amended over the years and this is not a substitute for the LRT/legal advice.
+  const NIA_LEG = {
+    admin: null,
+    crimes: 'Crimes Act 1961',
+    summary: 'Summary Offences Act 1981',
+    trespass: 'Trespass Act 1980',
+    drugs: 'Misuse of Drugs Act 1975',
+    arms: 'Arms Act 1983',
+    transport: 'Land Transport Act 1998',
+    familyViolence: 'Family Violence Act 2018',
+    bail: 'Bail Act 2000',
+    harassment: 'Harassment Act 1997',
+    covid: 'COVID-19 Public Health Response Act 2020',
+    search: 'Search and Surveillance Act 2012',
+  };
+  const N = (code, desc, cat, extra = {}) => ({ code, desc, cat, leg: extra.leg || NIA_LEG[cat] || null, ...extra });
   D.nia = [
-    N('1C', 'Car/Person Acting Suspiciously'),
-    N('1X', 'Suicide / Attempted Suicide'),
-    N('1Z', 'Other Incident'),
-    N('1U', 'Traffic Incident'),
-    N('1V', 'Vehicle Collision', { noOR: true }),
-    N('1D', 'Domestic Dispute', { noOR: true }),
-    N('2M', 'Missing Person', { noOR: true }),
-    N('2O', 'Court Order'),
-    N('5F', 'Family Harm', { noOR: true }),
-    N('6A', 'Police Conduct', { noOR: true }),
-    N('6C', 'Child Protection Report', { noOR: true }),
-    N('6D', 'Bail Breach', { noOR: true }),
-    N('6F', 'Forbidden to Drive', { noOR: true }),
-    N('6X', 'Warrantless Search Power Exercised'),
-    N('7P', 'Family Violence Order'),
-    N('1543', 'Common Assault (Manually)'),
-    N('1833', 'Assaults Child (Manually)'),
-    N('3100', 'Wilful Damage'),
-    N('3521', 'Disorderly Behaviour'),
-    N('3871', 'Contravenes Protection Order (Violence)'),
-    N('4111', 'Burglary'),
-    N('4211', 'Unlawfully Takes Motor Vehicle', { noOR: true, towing: true }),
-    N('4221', 'Unlawfully Interferes With Motor Vehicle', { noOR: true, towing: true }),
-    N('4410', 'Shoplifting (under $500)'),
-    N('4951', 'Sell, transfer or make available false document'),
-    N('6921', 'Possess Cannabis', { drug: true }),
-    N('6931', 'Possess Methamphetamine', { drug: true }),
-    N('6941', 'Possess Utensil for Drug Use', { drug: true }),
-    N('A101', 'Drove with excess breath alcohol (over 400mcg)', { eba: true }),
-    N('A102', 'Drove with excess blood alcohol (over 80mg)', { eba: true }),
-    N('A103', 'Failed or refused to supply blood specimen', { eba: true }),
-    N('A110', 'Under 20 drove with breath alcohol over 150mcg', { eba: true }),
-    N('W772', 'Breached COVID-19 Public Health Response Order', { covid: true }),
+    // ---- operational incident categories (not themselves an offence) ----
+    N('1C', 'Car/Person Acting Suspiciously', 'admin'),
+    N('1X', 'Suicide / Attempted Suicide', 'admin'),
+    N('1Z', 'Other Incident', 'admin'),
+    N('1U', 'Traffic Incident', 'admin'),
+    N('1V', 'Vehicle Collision', 'admin', { noOR: true }),
+    N('1D', 'Domestic Dispute', 'admin', { noOR: true }),
+    N('2M', 'Missing Person', 'admin', { noOR: true }),
+    N('2O', 'Court Order', 'admin'),
+    N('5F', 'Family Harm', 'admin', { noOR: true }),
+    N('6A', 'Police Conduct', 'admin', { noOR: true }),
+    N('6C', 'Child Protection Report', 'admin', { noOR: true }),
+    N('6D', 'Bail Breach', 'bail', { noOR: true, leg: 'Bail Act 2000, s 38 (breach of bail condition)' }),
+    N('6F', 'Forbidden to Drive', 'transport', { noOR: true, leg: 'Land Transport Act 1998, s 96 (breach of forbidden-to-drive notice)' }),
+    N('6X', 'Warrantless Search Power Exercised', 'search'),
+    N('7P', 'Family Violence Order', 'familyViolence'),
+    // ---- Crimes Act 1961 – violence ----
+    N('1543', 'Common Assault (Manually)', 'crimes', { leg: 'Crimes Act 1961, s 196 (Common assault)' }),
+    N('1833', 'Assaults Child (Manually)', 'crimes', { leg: 'Crimes Act 1961, s 194(a) (Assault on a child)' }),
+    N('1834', 'Male Assaults Female', 'crimes', { leg: 'Crimes Act 1961, s 194(b)' }),
+    N('1851', 'Assault on a Constable / Prison Officer', 'summary', { leg: 'Summary Offences Act 1981, s 10' }),
+    N('1861', 'Assault with Intent to Injure', 'crimes', { leg: 'Crimes Act 1961, s 193' }),
+    N('1871', 'Injures with Intent to Injure', 'crimes', { leg: 'Crimes Act 1961, s 189(2)' }),
+    N('1881', 'Wounds with Intent to Cause Grievous Bodily Harm', 'crimes', { leg: 'Crimes Act 1961, s 188(1)' }),
+    N('1891', 'Aggravated Assault', 'crimes', { leg: 'Crimes Act 1961, s 192' }),
+    N('1901', 'Common Assault (Domestic)', 'crimes', { leg: 'Crimes Act 1961, s 196' }),
+    N('1911', 'Threatens to Kill or Do Grievous Bodily Harm', 'crimes', { leg: 'Crimes Act 1961, s 306' }),
+    N('1921', 'Intimidation', 'summary', { leg: 'Summary Offences Act 1981, s 21' }),
+    N('1931', 'Criminal Harassment', 'harassment', { leg: 'Harassment Act 1997, s 8' }),
+    // ---- Crimes Act 1961 – dishonesty / property ----
+    N('3100', 'Wilful Damage', 'crimes', { leg: 'Crimes Act 1961, s 269 (Intentional damage)' }),
+    N('4111', 'Burglary', 'crimes', { leg: 'Crimes Act 1961, s 231' }),
+    N('4121', 'Aggravated Burglary', 'crimes', { leg: 'Crimes Act 1961, s 232' }),
+    N('4131', 'Robbery', 'crimes', { leg: 'Crimes Act 1961, s 234' }),
+    N('4141', 'Aggravated Robbery', 'crimes', { leg: 'Crimes Act 1961, s 235' }),
+    N('4211', 'Unlawfully Takes Motor Vehicle', 'crimes', { noOR: true, towing: true, leg: 'Crimes Act 1961, s 226(1)' }),
+    N('4221', 'Unlawfully Interferes With Motor Vehicle', 'crimes', { noOR: true, towing: true, leg: 'Crimes Act 1961, s 226(2)' }),
+    N('4410', 'Shoplifting (under $500)', 'crimes', { leg: 'Crimes Act 1961, s 219 / s 223(d) (Theft)' }),
+    N('4420', 'Theft (between $500 and $1000)', 'crimes', { leg: 'Crimes Act 1961, s 219 / s 223(c)' }),
+    N('4430', 'Theft (over $1000)', 'crimes', { leg: 'Crimes Act 1961, s 219 / s 223(a)' }),
+    N('4440', 'Receiving Stolen Property', 'crimes', { leg: 'Crimes Act 1961, s 246' }),
+    N('4450', 'Obtains by Deception', 'crimes', { leg: 'Crimes Act 1961, s 240' }),
+    N('4951', 'Sell, transfer or make available false document', 'crimes', { leg: 'Crimes Act 1961, s 258 (Using forged document)' }),
+    // ---- Summary Offences Act 1981 / Trespass Act 1980 ----
+    N('3521', 'Disorderly Behaviour', 'summary', { leg: 'Summary Offences Act 1981, s 3' }),
+    N('3531', 'Offensive Behaviour or Language', 'summary', { leg: 'Summary Offences Act 1981, s 4' }),
+    N('3541', 'Fighting in a Public Place', 'summary', { leg: 'Summary Offences Act 1981, s 7' }),
+    N('3551', 'Possession of Offensive Weapon', 'summary', { leg: 'Summary Offences Act 1981, s 13A' }),
+    N('3561', 'Wilful Trespass (Warned to Leave)', 'trespass', { leg: 'Trespass Act 1980, s 3/4' }),
+    N('3871', 'Contravenes Protection Order (Violence)', 'familyViolence', { leg: 'Family Violence Act 2018, s 112 (Offence to breach protection order)' }),
+    N('3881', 'Breaches Police Safety Order', 'familyViolence', { leg: 'Family Violence Act 2018' }),
+    // ---- Misuse of Drugs Act 1975 ----
+    N('6921', 'Possess Cannabis', 'drugs', { drug: true, leg: 'Misuse of Drugs Act 1975, s 7(1)(a) (Class C)' }),
+    N('6931', 'Possess Methamphetamine', 'drugs', { drug: true, leg: 'Misuse of Drugs Act 1975, s 7(1)(a) (Class A)' }),
+    N('6941', 'Possess Utensil for Drug Use', 'drugs', { drug: true, leg: 'Misuse of Drugs Act 1975, s 13(1)' }),
+    N('6951', 'Cultivate Prohibited Plant', 'drugs', { leg: 'Misuse of Drugs Act 1975, s 9' }),
+    N('6961', 'Supply or Offer to Supply Class A Drug', 'drugs', { leg: 'Misuse of Drugs Act 1975, s 6(1)(c)' }),
+    N('6971', 'Supply or Offer to Supply Class B/C Drug', 'drugs', { leg: 'Misuse of Drugs Act 1975, s 6(1)(c)' }),
+    N('6981', 'Possess Precursor Substance', 'drugs', { leg: 'Misuse of Drugs Act 1975, Part 3 (precursor substances)' }),
+    // ---- Arms Act 1983 ----
+    N('7011', 'Careless Use of Firearm', 'arms', { leg: 'Arms Act 1983, s 45' }),
+    N('7021', 'Unlawful Possession of Firearm', 'arms', { leg: 'Arms Act 1983, s 50/50A' }),
+    N('7031', 'Unlawful Possession of Restricted Weapon', 'arms', { leg: 'Arms Act 1983, s 51' }),
+    // ---- Land Transport Act 1998 (summary driving offences) ----
+    N('A101', 'Drove with excess breath alcohol (over 400mcg)', 'transport', { eba: true, leg: 'Land Transport Act 1998, s 56(1)' }),
+    N('A102', 'Drove with excess blood alcohol (over 80mg)', 'transport', { eba: true, leg: 'Land Transport Act 1998, s 56(2)' }),
+    N('A103', 'Failed or refused to supply blood specimen', 'transport', { eba: true, leg: 'Land Transport Act 1998, s 60' }),
+    N('A110', 'Under 20 drove with breath alcohol over 150mcg', 'transport', { eba: true, leg: 'Land Transport Act 1998, s 57' }),
+    N('A201', 'Reckless Driving', 'transport', { leg: 'Land Transport Act 1998, s 35' }),
+    N('A211', 'Careless Driving Causing Injury or Death', 'transport', { leg: 'Land Transport Act 1998, s 36' }),
+    N('A221', 'Failed to Stop / Ascertain Injury (Hit and Run)', 'transport', { leg: 'Land Transport Act 1998, s 51' }),
+    N('A231', 'Driving While Disqualified', 'transport', { leg: 'Land Transport Act 1998, s 32' }),
+    N('A241', 'Failed to Stop When Signalled (Fleeing Driver)', 'transport', { leg: 'Land Transport Act 1998, s 52' }),
+    // ---- COVID-19 Public Health Response Act 2020 ----
+    N('W772', 'Breached COVID-19 Public Health Response Order', 'covid', { covid: true, leg: 'COVID-19 Public Health Response Act 2020, s 26' }),
   ];
   D.niaByCode = Object.fromEntries(D.nia.map((o) => [o.code, o]));
+  D.niaCats = [...new Set(D.nia.map((o) => o.cat))];
 
   /* ------------------------------------------------------ CVIR defect library */
   D.cvirCats = {
@@ -389,6 +495,7 @@
         ],
         defaultVehicle: 'pv1',
       },
+      officers: OD.clone(D.officers),
       persons: seedPersons(), vehicles: seedVehicles(), locations: seedLocations(), occurrences: seedOccurrences(now),
       orgs: {
         G1: { id: 'G1', name: 'BLUE STREET MOTORS LIMITED', cat: 'Business', type: 'Car dealer', addr: '12 Blue Street, Thorndon, Wellington 6011', alerts: [] },
@@ -423,7 +530,7 @@
   OD.fullName = (p) => (p ? `${p.sn}, ${p.gn}` : '');
   OD.shortName = (p) => (p ? `${p.sn}, ${p.gn.split(' ')[0]}` : '');
   OD.personLine = (p) => (p ? `${F.dmy(p.dob)} (${F.age(p.dob)}) | ${p.prn}` : '');
-  OD.officer = (qid) => D.officers.find((o) => o.qid === qid);
+  OD.officer = (qid) => OD.db.officers.find((o) => o.qid === qid);
   OD.objTitle = (t, id) => {
     if (t === 'person') return OD.fullName(OD.person(id));
     if (t === 'vehicle') { const v = OD.vehicle(id); return v ? `${v.rego} ${v.make} ${v.model}`.trim() : ''; }

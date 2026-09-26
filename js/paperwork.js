@@ -480,7 +480,7 @@
       h += '<div class="sh">SUMMARY</div><div class="group">' + T.sections.filter((s) => !s.w || s.w(pw)).map((s) => { const { st } = OD.secStatus(pw, s); return `<div class="row"><span class="circ ${st === 'done' ? 'done' : st === 'partial' ? 'partial' : ''}" style="width:16px;height:16px"></span><div class="grow" style="font-size:13px">${esc(s.h || '')}</div><span class="right">${st === 'done' ? 'Complete' : st === 'partial' ? 'Incomplete' : s.req ? 'Required' : 'Optional'}</span></div>`; }).join('') + '</div>';
       if (T.approval) {
         if (!pw.supervisor) pw.supervisor = OD.db.settings.supervisor;
-        h += `<div class="sh">SUPERVISOR APPROVAL</div><div class="field pick" data-go="${OD.go('picker', { t: `pw:${pw.id}:`, k: 'supervisor', o: 'l:supervisors', title: 'Approving Supervisor' })}"><span class="lbl">Approving Supervisor</span><div class="pv">${esc(pw.supervisor)}</div></div><div class="footnote">${esc(T.approvalNote || 'Supervisor approval is required before this paperwork is sent to FMC/NIA.')}</div>`;
+        h += `<div class="sh">SUPERVISOR APPROVAL</div><div class="field pick" data-go="${OD.go('picker', { t: `pw:${pw.id}:`, k: 'supervisor', o: 'x:supervisors', title: 'Approving Supervisor' })}"><span class="lbl">Approving Supervisor</span><div class="pv">${esc(pw.supervisor)}</div></div><div class="footnote">${esc(T.approvalNote || 'Supervisor approval is required before this paperwork is sent to FMC/NIA.')}</div>`;
       }
       if (OD.db.offline) h += `<div class="footnote" style="color:var(--ios-red)">${T.onlineOnly ? 'You are offline. This paperwork must be submitted while online.' : 'You are offline. The paperwork will be queued and processed once you are back in coverage.'}</div>`;
       const dis = errs.length || (OD.db.offline && T.onlineOnly);
@@ -574,7 +574,7 @@
     right: '<button class="nb bold" data-act="shareDone">Done</button>',
     body: (p) => {
       const f = FD.get(p.folder); if (!f) return U.empty('Folder not found');
-      return '<div class="para small grey">When you share a folder, everything it contains is shared (paperwork and queries) so it is a great place to group relevant information.</div><div class="sh">OFFICERS</div><div class="group">' + OD.data.officers.filter((o) => !o.me).map((o) => `<div class="row" data-act="shareToggle" data-a="${o.qid}"><div class="grow"><div class="kv-k">${esc(o.qid)}</div><div class="kv-v">${esc(o.name)}</div></div>${f.shared.includes(o.qid) ? `<span style="color:var(--tint);position:absolute;right:12px">${I.check}</span>` : ''}</div>`).join('') + '</div>';
+      return '<div class="para small grey">When you share a folder, everything it contains is shared (paperwork and queries) so it is a great place to group relevant information.</div><div class="sh">OFFICERS</div><div class="group">' + OD.db.officers.filter((o) => !o.me).map((o) => `<div class="row" data-act="shareToggle" data-a="${o.qid}"><div class="grow"><div class="kv-k">${esc(o.qid)}</div><div class="kv-v">${esc(o.name)}</div></div>${f.shared.includes(o.qid) ? `<span style="color:var(--tint);position:absolute;right:12px">${I.check}</span>` : ''}</div>`).join('') + '</div>';
     },
   });
   action('shareToggle', (d, el, ctx) => { const f = FD.get(ctx.p.folder); const i = f.shared.indexOf(d.a); if (i >= 0) f.shared.splice(i, 1); else f.shared.push(d.a); OD.save(); N.refresh(ctx.u); });

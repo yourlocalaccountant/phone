@@ -17,7 +17,7 @@ Every screen has its own URL (`#/od/<tab>/<screen>,<params>/…`), so the browse
 
 ## What's included
 
-**Phone shell** – home screen with *OnDuty*, *OnDuty Edu* (Education build, pink icon + banner) and *SAM*; iOS status bar; tap the home bar to go back to the home screen.
+**Phone shell** – home screen with *OnDuty*, *OnDuty Edu* (Education build, pink icon + banner) and *SAM*; iOS status bar; tap the home bar to go back to the home screen; a cosmetic **passcode lock screen** appears on every page load (any 4-digit code, or the SKIP button, unlocks it – for realism only, it is not real security and gates nothing outside this demo).
 
 **OnDuty tabs**
 
@@ -28,13 +28,15 @@ Every screen has its own URL (`#/od/<tab>/<screen>,<params>/…`), so the browse
 | Tasks | district picker, colour-coded due times, task detail, previous actions, delegates, attachments, update task (offline sync pending) |
 | Paperwork | Awaiting Approval / Returned / Incomplete / Completed lists, Take Action (search, recently used), type filter |
 | Assigned | 30 most recent assigned cases, case summary, Update Narrative |
-| More | Settings (location boundary, stations, vehicles & equipment incl. speed and breath-test devices, supervisor, call sign), Support (Refresh / Wipe & Reload, notice numbers, reference data), Audit Log, LRT Offence Library (pin / reorder pinned offences, categories incl. Impaired Driving), CVIR Defect Library |
+| More | Settings (location boundary, stations, vehicles & equipment incl. speed and breath-test devices, supervisor, call sign), **Officers** (fictional roster – register / edit / remove officers, who then appear in every Supervisor / Authorising Officer / Call Sign / "Seized By" picker in the app), Support (Refresh / Wipe & Reload, notice numbers, reference data), Audit Log, LRT Offence Library (pin / reorder pinned offences, categories incl. Impaired Driving), CVIR Defect Library |
 
 **Paperwork (19 types)** – each with its sections, sub-screens, blue/grey/red completion bars, *Review to Submit* validation, supervisor approval where required, and a "what happens next" confirmation:
 
 Offence Report · Infringement Notice (INF create dialog, compliance / written warning / infringement resolutions, traffic / alcohol / overloading / drug-driving / COVID-19 notes, notice-number reveal & lock) · Noting · Family Harm (SAFVR, dynamic assessment with Officer/Guided view, safety plan, PSO, child protection referral, narrative sections) · Traffic Crash Report (crash location map, road conditions, vehicles with damage diagram, drivers/passengers, crash diagram editor) · EBA Procedure Sheet (passive → screening → accompany → evidential breath test → 10-minute blood option → blood test → charging decision → post-procedure admin, with rights read-aloud text) · Fleeing Driver Report · AWHI Referral (consent & privacy, service-provider search/filter, email preview) · CVIR · Health Referral – Drug Use · Property Form (items, chain of custody, verification, interested parties) · s118 Letter · Place of Worship / Education / Gun Club visits · Warrantless Search · Bail Check · Update Narrative · Update WTA.
 
 Common paperwork features: CARD events, occurrence date/time wheels (with the *Date Picker* / *Time Picker* quick fill), location selection (search, GPS, nearby, folder, map), person/vehicle/organisation selection (from paperwork, folder, query history, or a QP/QV/QO query), create new objects, links (existing + new), photos (downscaled and stored locally), swipe-left to remove, "•••" menu (create Noting / AWHI / Warrantless Search / INF / similar, share folder, become reporting member, abandon EBA, delete), multi-user section ownership, offline queueing.
+
+**Offence & legislation reference** – both offence libraries cite a real NZ Act (and, for well-known ones, section) alongside each offence: the LRT/infringement library (traffic, vehicle, driver licensing, alcohol, overloading, commercial vehicle – Land Transport Act 1998 / Road User Rule 2004 etc.) and the NIA incident/offence codes used in Offence Reports, Family Harm and similar (Crimes Act 1961, Summary Offences Act 1981, Misuse of Drugs Act 1975, Arms Act 1983, Family Violence Act 2018, Land Transport Act 1998, Harassment Act 1997, Bail Act 2000, COVID-19 Public Health Response Act 2020). This is reference content for the recreation, generated from general legal knowledge, not an authoritative or complete copy of Police's real LRT/NIA code tables – always check legislation.govt.nz for current wording.
 
 **SAM** – map with Officers, Bail and WTA layers (status-coloured bail pins, clusters, filters for priority / curfew / crime type, WTA issued-date filter), bail and warrant drawers, nearby list with search, route, *Action Bail* (5K prompt) and *Action 2W* deep links into OnDuty with the ◀ SAM breadcrumb and "Today" tab.
 
@@ -55,5 +57,8 @@ js/screens-query.js queries, results, summaries, maps, crash diagram, external a
 js/screens-tabs.js  Tasks, Assigned, More, AWHI service picker
 js/sam.js           SAM map app
 js/app.js           home screen, screen directory, demo controls, boot
+```
 
-NL 1
+## Note on scope
+
+This started from a public user-guide PDF, not from New Zealand Police's real systems, and it never will be connected to them. There's deliberately no real authentication and no real officer-registration/identity system here – the passcode lock and the Officers roster are both cosmetic/local-only demo features, kept honestly labelled as such, so that this stays a recreation and never becomes something that could be mistaken for the genuine operational tool.

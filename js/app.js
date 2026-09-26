@@ -15,6 +15,41 @@
   };
   OD.screens._missing = { title: 'Not found', body: (p, ctx) => U.empty(`Unknown screen “${esc(ctx.e.s)}”`) };
 
+  /* ------------------------------------------------------------ lock screen
+     A cosmetic "unlock your work phone" screen shown once per page load, for
+     realism only. It is NOT real security: any 4-digit code (or the Face ID
+     icon) unlocks it, nothing is verified against anything, and it gates
+     nothing except this demo's own springboard. */
+  const lockRoot = () => document.getElementById('lock-root');
+  let lockDigits = '';
+  const renderLock = () => {
+    const root = lockRoot(); if (!root) return;
+    const d = new Date();
+    const date = d.toLocaleDateString('en-NZ', { weekday: 'long', day: 'numeric', month: 'long' });
+    const dots = Array.from({ length: 4 }, (_, i) => `<span class="lk-dot ${i < lockDigits.length ? 'on' : ''}"></span>`).join('');
+    const key = (n, cls = '') => `<button class="lk-key ${cls}" data-lk="${n}">${n}</button>`;
+    root.innerHTML = `<div class="lockscreen"><div class="lk-time">${F.hm(d)}</div><div class="lk-date">${esc(date)}</div><div class="lk-badge"><img src="assets/icon-onduty.svg" alt="">Police iPhone (demo)</div><div class="lk-title">Enter Passcode</div><div class="lk-sub">This is a cosmetic demo lock screen for realism – it isn't real security.</div><div class="lk-dots">${dots}</div><div class="lk-pad">${key(1)}${key(2)}${key(3)}${key(4)}${key(5)}${key(6)}${key(7)}${key(8)}${key(9)}<button class="lk-key lk-sub-k" data-lk="skip">SKIP</button>${key(0)}<button class="lk-key lk-sub-k" data-lk="del">⌫</button></div><div class="lk-hint">Demo mode: any 4-digit code unlocks it, or tap SKIP. This recreation has no real login and is not connected to any Police system.</div></div>`;
+  };
+  const unlock = () => {
+    const root = lockRoot(); if (!root) return;
+    const ls = root.querySelector('.lockscreen'); if (ls) ls.style.cssText = 'transition:opacity .25s;opacity:0;pointer-events:none';
+    setTimeout(() => { root.innerHTML = ''; }, 260);
+  };
+  OD.showLock = () => {
+    lockDigits = '';
+    renderLock();
+    const root = lockRoot();
+    root.onclick = (ev) => {
+      const b = ev.target.closest('[data-lk]'); if (!b) return;
+      const v = b.dataset.lk;
+      if (v === 'skip') return unlock();
+      if (v === 'del') { lockDigits = lockDigits.slice(0, -1); return renderLock(); }
+      if (lockDigits.length >= 4) return;
+      lockDigits += v; renderLock();
+      if (lockDigits.length === 4) setTimeout(unlock, 220);
+    };
+  };
+
   /* ------------------------------------------------------------ demo state */
   OD.setOffline = (v) => {
     OD.db.offline = !!v;
@@ -88,7 +123,7 @@
       G.push([`Paperwork – ${code}`, items]);
     });
     G.push(['Assigned tab', [['Assigned Cases', od('assigned', [])], ['Case summary', od('assigned', [['occ', { id: 'O1' }]])], ['Update Narrative (Take Action)', od('assigned', [['occ', { id: 'O1' }]], [[['take-action', { src: 'occ:O1' }]]])]]]);
-    G.push(['More tab', [['More', od('more', [])], ['Settings', od('more', [['settings']])], ['Vehicles and Equipment', od('more', [['settings']], [[['veh-equip']]])], ['Vehicle and Equipment (edit)', od('more', [['settings']], [[['veh-equip'], ['veh-equip-edit', { id: 'pv1' }]]])], ['Breath Test Device', od('more', [['settings']], [[['veh-equip'], ['veh-equip-edit', { id: 'pv1' }], ['form', { t: 'db:settings.vehicles#pv1.breath#bd1', f: 'breath-device', rm: 1 }]]])], ['Support', od('more', [['support']])], ['Audit Log', od('more', [['audit']])], ['LRT Offence Library', od('more', [['lib', { mode: 'browse' }]])], ['Offence category (Speeding)', od('more', [['lib', { mode: 'browse' }], ['lib-cat', { cat: 'Speeding' }]])], ['Impaired Driving (drug driving)', od('more', [['lib', { mode: 'browse' }], ['lib-cat', { cat: 'Impaired Driving' }]])], ['Offence details', od('more', [['lib', { mode: 'browse' }], ['lib-offence', { code: 'C101' }]])], ['CVIR Defect Library', od('more', [['cvir-lib']])], ['CVIR defect category', od('more', [['cvir-lib'], ['cvir-lib-cat', { cat: 'Brakes' }]])]]]);
+    G.push(['More tab', [['More', od('more', [])], ['Officers roster', od('more', [['officers']])], ['Register Officer', od('more', [['officers'], ['officer-edit']])], ['Edit Officer', od('more', [['officers'], ['officer-edit', { qid: 'TTT123' }]])], ['Settings', od('more', [['settings']])],['Vehicles and Equipment', od('more', [['settings']], [[['veh-equip']]])], ['Vehicle and Equipment (edit)', od('more', [['settings']], [[['veh-equip'], ['veh-equip-edit', { id: 'pv1' }]]])], ['Breath Test Device', od('more', [['settings']], [[['veh-equip'], ['veh-equip-edit', { id: 'pv1' }], ['form', { t: 'db:settings.vehicles#pv1.breath#bd1', f: 'breath-device', rm: 1 }]]])], ['Support', od('more', [['support']])], ['Audit Log', od('more', [['audit']])], ['LRT Offence Library', od('more', [['lib', { mode: 'browse' }]])], ['Offence category (Speeding)', od('more', [['lib', { mode: 'browse' }], ['lib-cat', { cat: 'Speeding' }]])], ['Impaired Driving (drug driving)', od('more', [['lib', { mode: 'browse' }], ['lib-cat', { cat: 'Impaired Driving' }]])], ['Offence details', od('more', [['lib', { mode: 'browse' }], ['lib-offence', { code: 'C101' }]])], ['CVIR Defect Library', od('more', [['cvir-lib']])], ['CVIR defect category', od('more', [['cvir-lib'], ['cvir-lib-cat', { cat: 'Brakes' }]])]]]);
     G.push(['SAM app', [['Map', H('sam', '', [['sam']])], ['Map type and layers', H('sam', '', [['sam', { sheet: 'layers' }]])], ['Bail details (drawer)', H('sam', '', [['sam'], ['sam', { sheet: 'bail:B3' }]])], ['Bail cluster', H('sam', '', [['sam', { sheet: 'cluster:B1,B2' }]])], ['Warrant to Arrest details', H('sam', '', [['sam'], ['sam', { sheet: 'wta:W4' }]])], ['Nearby list', H('sam', '', [['sam', { sheet: 'list:' }]])], ['Route to bailee', H('sam', '', [['sam', { route: 'bail:B3' }]])], ['OnDuty Bail Check (from SAM)', H('od', 'home', [['home']], [[['pw', { id: 'demo-BC', today: 1 }], ['form', { t: 'pw:demo-BC:d.cond', f: 'bc-cond' }]]])], ['OnDuty Update WTA (Action 2W)', H('od', 'home', [['home']], [[['pw', { id: 'demo-WTA', today: 1 }]]])]]]);
     return G;
   };
@@ -120,11 +155,14 @@
   const start = () => {
     OD.db = OD.loadDB();
     if (!OD.db || OD.db.v !== 1) { OD.seed(); OD.saveNow(); }
+    if (!OD.db.officers || !OD.db.officers.length) { OD.db.officers = OD.clone(OD.data.officers); OD.save(); } // migrate older saves
     OD.boot();
+    OD.showLock();
     renderDirectory(); OD.onRoute();
     document.getElementById('pc-filter').addEventListener('input', renderDirectory);
     const cb = document.getElementById('pc-offline'); cb.checked = !!OD.db.offline; cb.addEventListener('change', () => OD.setOffline(cb.checked));
     document.getElementById('pc-home').addEventListener('click', () => N.homeScreen());
+    document.getElementById('pc-lock').addEventListener('click', () => OD.showLock());
     document.getElementById('pc-reset').addEventListener('click', () => { if (confirm('Reset all demo data stored in this browser?')) OD.resetDemo(); });
     document.getElementById('directory').addEventListener('click', (e) => { if (e.target.closest('a') && window.innerWidth <= 760) document.getElementById('panel').classList.remove('open'); });
     document.getElementById('dir-fab').addEventListener('click', () => document.getElementById('panel').classList.toggle('open'));

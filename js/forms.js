@@ -57,7 +57,7 @@
   };
 
   /* --------------------------------------------------------------- options */
-  OD.optProviders = {};
+  OD.optProviders = OD.optProviders || {}; // data.js (loaded first) may have already registered some
   const normOpt = (o) => (typeof o === 'string' ? { v: o, l: o } : { v: o.v, l: o.l ?? o.v, sub: o.sub });
   OD.options = (oref, d, pw) => {
     let arr = [];

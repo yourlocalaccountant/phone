@@ -30,7 +30,7 @@
   const offTop = (d, pw, fc, opts = {}) => {
     const o = d.lib === 'nia' ? nia(d.code) : lrt(d.code);
     const lock = fc && fc.locked;
-    return `<div class="sh">SUMMARY</div><div class="para"><b>${esc(d.code)} - ${esc(o.desc || '')}</b>${o.eff ? '\n' + esc(o.eff) : ''}</div>${lock ? '' : `<button class="bigbtn thin" data-act="offChooseOther">Choose Other Offence</button>`}${opts.wording !== false && o.text ? `<div class="sh">OFFENCE</div><div class="para">${esc(o.text)}</div>` : ''}${opts.fee && o.ntype ? `<div class="sh">FEES AND DEMERITS</div><div class="para">Fee\n${o.fee ? '$' + o.fee : o.speed ? 'Depends on speed' : 'Depends on weight'}${o.dem ? `\nDemerits: ${esc(o.dem)}` : ''}</div>` : ''}`;
+    return `<div class="sh">SUMMARY</div><div class="para"><b>${esc(d.code)} - ${esc(o.desc || '')}</b>${o.eff ? '\n' + esc(o.eff) : ''}</div>${lock ? '' : `<button class="bigbtn thin" data-act="offChooseOther">Choose Other Offence</button>`}${opts.wording !== false && o.text ? `<div class="sh">OFFENCE</div><div class="para">${esc(o.text)}</div>` : ''}${opts.fee && o.ntype ? `<div class="sh">FEES AND DEMERITS</div><div class="para">Fee\n${o.fee ? '$' + o.fee : o.speed ? 'Depends on speed' : 'Depends on weight'}${o.dem ? `\nDemerits: ${esc(o.dem)}` : ''}</div>` : ''}${o.leg ? `<div class="sh">LEGISLATION</div><div class="para">${esc(o.leg)}</div>` : ''}`;
   };
   OD.action('offChooseOther', (d, el, ctx) => {
     const pw = OD.pwOfRef(ctx.p.t); const off = OD.resolve(ctx.p.t); if (!pw || !off) return;
@@ -355,7 +355,7 @@
   FM['cpr-incident'] = txt('Alleged Incident', 'Describe the alleged incident');
   FM['cpr-prev'] = txt('Prevention', 'What actions have been taken to prevent further harm?');
   FM['cpr-hist'] = txt('Police History', 'Relevant Police history');
-  FM['cpr-staff'] = { title: 'Reporting Staff Member', init: (d) => { d.qid = d.qid || `${OD.db.me.qid} - ${OD.db.me.name}`; }, fields: [{ h: 'REPORTING STAFF MEMBER' }, { pk: 'qid', l: 'Staff Member', o: 'officerQids' }, { t: 'phone', l: 'Contact phone', kb: 'tel', req: 1 }] };
+  FM['cpr-staff'] = { title: 'Reporting Staff Member', init: (d) => { d.qid = d.qid || `${OD.db.me.qid} - ${OD.db.me.name}`; }, fields: [{ h: 'REPORTING STAFF MEMBER' }, { pk: 'qid', l: 'Staff Member', o: 'x:officerQids' }, { t: 'phone', l: 'Contact phone', kb: 'tel', req: 1 }] };
   FM['fh-cpr'] = { title: 'Child Protection Referral', fields: [{ h: 'PERSONS INVOLVED' }, { person: 'children', l: 'Children at Risk', multi: 1 }, { h: 'REFERRAL' }, { sub: 'incident', l: 'Alleged Incident', f: 'cpr-incident' }, { sub: 'prevention', l: 'Prevention', f: 'cpr-prev' }, { sub: 'history', l: 'Police History', f: 'cpr-hist' }, { sub: 'staff', l: 'Reporting Staff Member', f: 'cpr-staff' }] };
   T('FH', {
     name: 'Family Harm Investigation', title: 'Family Harm', approval: true, multi: true,
@@ -365,7 +365,7 @@
     sections: [
       { t: 'card', h: 'CARD EVENT', req: 1 },
       { t: 'occ', h: 'OCCURRENCE DETAILS', add: '+ Occurrence Details', l: 'Family Harm Occurred On:', fields: [{ pk: 'channel', l: 'Reporting Channel', o: 'channels' }], req: 1 },
-      { t: 'value', k: 'sup', h: 'EVENT SUPERVISOR', l: 'Event Supervisor', o: 'l:supervisors', note: 'The Event Supervisor is responsible for reviewing the Family Harm Investigation as it is completed.', req: 1 },
+      { t: 'value', k: 'sup', h: 'EVENT SUPERVISOR', l: 'Event Supervisor', o: 'x:supervisors', note: 'The Event Supervisor is responsible for reviewing the Family Harm Investigation as it is completed.', req: 1 },
       { t: 'loc', h: 'LOCATION', pinStyle: true, req: 1 },
       { t: 'persons', h: 'PERSONS', f: 'fh-person', safvr: true, req: 1 },
       { t: 'list', k: 'da', h: 'SAFETY PLANNING', add: '+ Dynamic Assessment', f: 'fh-da', req: 1, title: (e) => { const c = concernOf(e); const p = OD.person(e.par); return `Dynamic Assessment${p ? ' – ' + OD.shortName(p) : ''}`; }, sum: (e) => `Total Concern for Safety: ${concernOf(e) === 'None' ? 'Not yet assessed' : concernOf(e)}` },
@@ -558,7 +558,7 @@
   });
 
   /* ============================================================ FLEEING DRIVER */
-  FM['fdr-unitdet'] = { title: 'Unit Details', noun: 'unit', fields: [{ h: 'UNIT' }, { pk: 'callsign', l: 'Call Sign', o: 'callSigns' }, { pk: 'vehicle', l: 'Police Vehicle', o: 'x:policeVehicles' }, { pk: 'driver', l: 'Driver', o: 'officerQids' }, { pk: 'pax', l: 'Passengers', o: 'officerQids', multi: 1, opt: 1 }] };
+  FM['fdr-unitdet'] = { title: 'Unit Details', noun: 'unit', fields: [{ h: 'UNIT' }, { pk: 'callsign', l: 'Call Sign', o: 'callSigns' }, { pk: 'vehicle', l: 'Police Vehicle', o: 'x:policeVehicles' }, { pk: 'driver', l: 'Driver', o: 'x:officerQids' }, { pk: 'pax', l: 'Passengers', o: 'x:officerQids', multi: 1, opt: 1 }] };
   FM['fdr-unit'] = {
     title: 'Unit Details',
     fields: [
@@ -569,7 +569,7 @@
       { h: 'SECONDARY UNIT DETAILS' }, { list: 'secondary', add: '+ Secondary Unit', f: 'fdr-unitdet', title: (e) => e.callsign || 'Secondary Unit' },
     ],
   };
-  FM['fdr-tdd'] = { title: 'TDD Deployment Details', noun: 'TDD deployment', fields: [{ h: 'TDD DEPLOYMENT DETAILS' }, { seg: 'method', l: 'TDD Method', o: 'tddMethod' }, { t: 'location', l: 'Location', req: 1, lo: 'l:nearStreets' }, { pk: 'staff', l: 'Staff Member QID', o: 'officerQids' }] };
+  FM['fdr-tdd'] = { title: 'TDD Deployment Details', noun: 'TDD deployment', fields: [{ h: 'TDD DEPLOYMENT DETAILS' }, { seg: 'method', l: 'TDD Method', o: 'tddMethod' }, { t: 'location', l: 'Location', req: 1, lo: 'l:nearStreets' }, { pk: 'staff', l: 'Staff Member QID', o: 'x:officerQids' }] };
   FM['fdr-details'] = {
     title: 'Fleeing Details',
     fields: [
@@ -641,7 +641,7 @@
   });
 
   /* ================================================================== CVIR */
-  FM['cvir-inspector'] = { title: 'Inspector', noun: 'inspector', fields: [{ h: 'INSPECTOR' }, { pk: 'qid', l: 'Inspector', o: 'officerQids' }] };
+  FM['cvir-inspector'] = { title: 'Inspector', noun: 'inspector', fields: [{ h: 'INSPECTOR' }, { pk: 'qid', l: 'Inspector', o: 'x:officerQids' }] };
   FM['cvir-insp'] = {
     title: 'Inspection Details', back: 'CVIR',
     init: (d) => { d.date = d.date || F.iso(); d.date_t = d.date_t || F.hm(); },
@@ -703,8 +703,8 @@
       { h: 'ALTERNATIVE REFERENCES' }, { list: 'alt', add: '+ Alternative Reference', f: 'pf-serial', title: (e) => e.no || 'Reference' },
     ],
   };
-  FM['pf-coc'] = { title: 'Chain of Custody', init: (d) => { d.by = d.by || `${OD.db.me.qid} - ${OD.db.me.name}`; d.dt = d.dt || F.iso(); }, fields: [{ h: 'SEIZED DETAILS' }, { dt: 'dt', l: 'Date/Time' }, { pk: 'by', l: 'Seized By', o: 'officerQids' }, { t: 'subloc', l: 'Sub Location', opt: 1 }, { note: 'The initial Chain of Custody (first seized by details) is automatically recorded. Chain of Custody cannot be transferred to another Person or Organisation in OnDuty – this is only available from PROP Desktop.' }] };
-  FM['pf-ver'] = { title: 'Verification', back: 'Item Overview', fields: [{ h: 'VERIFICATION DETAILS' }, { seg: 'by', l: 'Verified By', o: ['Police User', 'Other'] }, { dt: 'dt', l: 'Verified Date/Time' }, { pk: 'qid', l: 'QID', o: 'officerQids', w: (d) => d.by === 'Police User' }, { t: 'name', l: 'Verifier Name', req: 1, w: (d) => d.by === 'Other' }, { note: 'Verification will need to be completed in PROP Desktop if the verifier was a Police User. If the Verifier was Other, it will automatically be set to Verified in PROP Desktop.' }] };
+  FM['pf-coc'] = { title: 'Chain of Custody', init: (d) => { d.by = d.by || `${OD.db.me.qid} - ${OD.db.me.name}`; d.dt = d.dt || F.iso(); }, fields: [{ h: 'SEIZED DETAILS' }, { dt: 'dt', l: 'Date/Time' }, { pk: 'by', l: 'Seized By', o: 'x:officerQids' }, { t: 'subloc', l: 'Sub Location', opt: 1 }, { note: 'The initial Chain of Custody (first seized by details) is automatically recorded. Chain of Custody cannot be transferred to another Person or Organisation in OnDuty – this is only available from PROP Desktop.' }] };
+  FM['pf-ver'] = { title: 'Verification', back: 'Item Overview', fields: [{ h: 'VERIFICATION DETAILS' }, { seg: 'by', l: 'Verified By', o: ['Police User', 'Other'] }, { dt: 'dt', l: 'Verified Date/Time' }, { pk: 'qid', l: 'QID', o: 'x:officerQids', w: (d) => d.by === 'Police User' }, { t: 'name', l: 'Verifier Name', req: 1, w: (d) => d.by === 'Other' }, { note: 'Verification will need to be completed in PROP Desktop if the verifier was a Police User. If the Verifier was Other, it will automatically be set to Verified in PROP Desktop.' }] };
   FM['pf-ip-role'] = { title: 'Person Role', noun: 'role', fields: [{ h: 'PERSON ROLE' }, { pk: 'role', l: 'Role', o: 'ipRoles' }, { person: 'pid', l: 'Person' }] };
   FM['pf-ip-org'] = { title: 'Organisation Role', noun: 'role', fields: [{ h: 'ORGANISATION ROLE' }, { pk: 'role', l: 'Role', o: 'ipRoles' }, { pk: 'org', l: 'Organisation', o: 'x:pwOrgs' }] };
   FM['pf-ip'] = { title: 'Interested Parties', back: 'Back', status: (d) => ((d.roles || []).length || (d.orgRoles || []).length ? 'done' : 'none'), fields: [{ h: 'INTERESTED PARTIES' }, { list: 'roles', add: '+ Person Role', f: 'pf-ip-role', title: (e) => `${e.role || 'Role'}${e.pid ? ' – ' + OD.fullName(OD.person(e.pid)) : ''}` }, { list: 'orgRoles', add: '+ Org Role', f: 'pf-ip-org', title: (e) => `${e.role || 'Role'}${e.org ? ' – ' + e.org : ''}` }, { note: 'Record the relevant Interested Party details for every Property Item (e.g. the Owner, the Finder). Each Person or Organisation in the Property paperwork must have at least one role on at least one Property Item.' }] };
@@ -783,7 +783,7 @@
     sections: [
       { t: 'card', h: 'CARD EVENT' },
       { t: 'occ', h: 'INCIDENT DETAILS', l: '', req: 1 },
-      { t: 'value', k: 'auth', h: 'AUTHORISING OFFICER', l: 'Authorising Officer', o: 'l:supervisors', req: 1 },
+      { t: 'value', k: 'auth', h: 'AUTHORISING OFFICER', l: 'Authorising Officer', o: 'x:supervisors', req: 1 },
       { t: 'loc', h: 'POWER LOCATION', add: '+ Power Location', foot: 'The location where the power was exercised', req: 1 },
       { t: 'list', k: 'targets', h: 'SEARCH TARGETS', add: '+ Target', f: 'ws-target', title: (e) => (e.type ? `${e.type}${e.desc ? ' - ' + e.desc : ''}` : 'Target'), foot: 'The targets that the power was executed on' },
       { t: 'persons', k: 'ptargets', h: 'PERSON TARGETS', add: '+ Person' },
