@@ -45,6 +45,7 @@ Common paperwork features: CARD events, occurrence date/time wheels (with the *D
 ## Code layout
 
 ```
+wrangler.jsonc       Cloudflare Workers Static Assets config (serves this folder as-is; no build step, no server code)
 index.html          phone frame + side panel
 css/app.css         iOS-style UI, frame, SAM, responsive rules
 js/core.js          helpers, icons, avatars, storage, router (hash ⇄ nav stacks), overlays, gestures
