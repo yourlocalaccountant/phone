@@ -5,6 +5,11 @@
 (function () {
   'use strict';
   const OD = (window.OD = { screens: {}, actions: {}, forms: {}, types: {}, lists: {} });
+  // Bumped by hand on every deploy - shown on the springboard so it's easy to
+  // tell, just by looking at the running app, whether a fix has actually gone
+  // live (vs. a stale cached build or a Cloudflare Workers Build that hasn't
+  // deployed yet).
+  OD.BUILD = '2026-09-27.1';
 
   /* ---------------------------------------------------------------- helpers */
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
