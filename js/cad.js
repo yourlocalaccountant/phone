@@ -202,10 +202,14 @@
     body: () => {
       const persons = Object.values(OD.db.persons);
       const vehicles = Object.values(OD.db.vehicles);
-      return '<div class="gap"></div><div class="group"><div class="row add" data-go="records-new-person">+ Add Person</div><div class="row add" data-go="records-new-vehicle">+ Add Vehicle</div></div>'
+      const locations = Object.values(OD.db.locations);
+      const orgs = Object.values(OD.db.orgs);
+      return '<div class="gap"></div><div class="group"><div class="row add" data-go="records-new-person">+ Add Person</div><div class="row add" data-go="records-new-vehicle">+ Add Vehicle</div><div class="row add" data-go="records-new-location">+ Add Location</div><div class="row add" data-go="records-new-org">+ Add Organisation</div></div>'
         + `${U.sh(`PERSONS (${persons.length})`)}<div class="group">${persons.length ? persons.map((p) => OD.personCard(p, { go: OD.go('person', { id: p.id }) })).join('') : U.empty('No persons added yet')}</div>`
         + `${U.sh(`VEHICLES (${vehicles.length})`)}<div class="group">${vehicles.length ? vehicles.map((v) => OD.vehicleCard(v, { go: OD.go('vehicle', { id: v.id }) })).join('') : U.empty('No vehicles added yet')}</div>`
-        + '<div class="footnote">Persons and vehicles added here become searchable via Query Person / Query Vehicle in OnDuty. Stored only in this browser.</div>';
+        + `${U.sh(`LOCATIONS (${locations.length})`)}<div class="group">${locations.length ? locations.map((l) => OD.locationCard(l, { go: OD.go('location', { id: l.id }) })).join('') : U.empty('No locations added yet')}</div>`
+        + `${U.sh(`ORGANISATIONS (${orgs.length})`)}<div class="group">${orgs.length ? orgs.map((o) => OD.orgCard(o, { go: OD.go('org', { id: o.id }) })).join('') : U.empty('No organisations added yet')}</div>`
+        + '<div class="footnote">Records added here become searchable via Query Person / Vehicle / Location / Organisation in OnDuty. Stored only in this browser.</div>';
     },
   });
 
@@ -276,5 +280,57 @@
     const colour = x.colour || '';
     OD.db.vehicles[id] = { id, rego, make: x.make || '', model: x.model || '', colour, hex: OD.colourHex[colour] || '#8a8a8f', outline: colour === 'White', body: x.body || 'Sedan', vin: x.vin ? x.vin.toUpperCase() : '', year: new Date().getFullYear(), alerts: [], regExp: '', wofExp: '' };
     OD.tmp.recvehicle = {}; OD.save(); N.pop(); OD.ui.toast(`${rego} added`);
+  });
+
+  OD.forms['records-location'] = {
+    fields: [
+      { h: 'LOCATION DETAILS' },
+      { t: 'addr', l: 'Address', req: 1 },
+      { pk: 'type', l: 'Type', o: ['Residential', 'Commercial', 'Street', 'Intersection', 'Place of Worship', 'Education', 'Other'] },
+      { note: 'Adds a real location record to this browser’s NIA data. Stored only here – not sent anywhere.' },
+    ],
+  };
+  screen('records-new-location', {
+    title: 'Add Location',
+    target: () => OD.resolve('tmp:recloc'),
+    body: () => {
+      const d = OD.resolve('tmp:recloc');
+      if (!d._loaded) Object.assign(d, { type: 'Residential', _loaded: true });
+      return OD.renderFields(OD.forms['records-location'].fields, d, { ref: 'tmp:recloc', fid: 'records-location', pw: null, reviewed: d._reviewed }) + '<button class="bigbtn" data-act="recordsSaveLocation">Add Location</button>';
+    },
+  });
+  action('recordsSaveLocation', (d, el, ctx) => {
+    const x = OD.resolve('tmp:recloc');
+    if (!x.addr) { x._reviewed = true; OD.save(); N.refresh(ctx.u); return OD.ui.toast('Address is required'); }
+    const id = OD.uid('L');
+    OD.db.locations[id] = { id, addr: x.addr.toUpperCase(), type: x.type || 'Residential', alerts: [], x: 30 + Math.random() * 40, y: 30 + Math.random() * 40 };
+    OD.tmp.recloc = {}; OD.save(); N.pop(); OD.ui.toast('Location added');
+  });
+
+  OD.forms['records-org'] = {
+    fields: [
+      { h: 'ORGANISATION DETAILS' },
+      { t: 'name', l: 'Name', req: 1, upper: 1 },
+      { seg: 'cat', l: 'Category', o: ['Business', 'Club', 'Other'] },
+      { t: 'type', l: 'Type', opt: 1, ph: 'e.g. Car dealer, School' },
+      { t: 'addr', l: 'Address', opt: 1 },
+      { note: 'Adds a real organisation record to this browser’s NIA data. Stored only here – not sent anywhere.' },
+    ],
+  };
+  screen('records-new-org', {
+    title: 'Add Organisation',
+    target: () => OD.resolve('tmp:recorg'),
+    body: () => {
+      const d = OD.resolve('tmp:recorg');
+      if (!d._loaded) Object.assign(d, { cat: 'Business', _loaded: true });
+      return OD.renderFields(OD.forms['records-org'].fields, d, { ref: 'tmp:recorg', fid: 'records-org', pw: null, reviewed: d._reviewed }) + '<button class="bigbtn" data-act="recordsSaveOrg">Add Organisation</button>';
+    },
+  });
+  action('recordsSaveOrg', (d, el, ctx) => {
+    const x = OD.resolve('tmp:recorg');
+    if (!x.name) { x._reviewed = true; OD.save(); N.refresh(ctx.u); return OD.ui.toast('Name is required'); }
+    const id = OD.uid('G');
+    OD.db.orgs[id] = { id, name: x.name.toUpperCase(), cat: x.cat || 'Business', type: x.type || '', addr: x.addr || '', alerts: [] };
+    OD.tmp.recorg = {}; OD.save(); N.pop(); OD.ui.toast(`${OD.org(id).name} added`);
   });
 })();

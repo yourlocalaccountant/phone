@@ -9,7 +9,7 @@
   // tell, just by looking at the running app, whether a fix has actually gone
   // live (vs. a stale cached build or a Cloudflare Workers Build that hasn't
   // deployed yet).
-  OD.BUILD = '2026-09-27.1';
+  OD.BUILD = '2026-09-27.2';
 
   /* ---------------------------------------------------------------- helpers */
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
