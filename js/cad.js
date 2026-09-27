@@ -197,6 +197,7 @@
      same OD.db.persons/OD.db.vehicles used by Query Person / Query Vehicle
      in OnDuty) – there is no seeded or generated data anywhere in this
      recreation, so this is how records get in. */
+  const itemRow = (it) => `<div class="row" data-go="${OD.go('item', { id: it.id })}"><div class="grow"><div class="kv-k">${esc(it.ident)}</div><div class="kv-v">${esc(it.cat)} · ${esc(it.status)}</div></div><span class="chev">${I.chev}</span></div>`;
   screen('records', {
     title: 'Records',
     body: () => {
@@ -204,12 +205,14 @@
       const vehicles = Object.values(OD.db.vehicles);
       const locations = Object.values(OD.db.locations);
       const orgs = Object.values(OD.db.orgs);
-      return '<div class="gap"></div><div class="group"><div class="row add" data-go="records-new-person">+ Add Person</div><div class="row add" data-go="records-new-vehicle">+ Add Vehicle</div><div class="row add" data-go="records-new-location">+ Add Location</div><div class="row add" data-go="records-new-org">+ Add Organisation</div></div>'
+      const items = Object.values(OD.db.items);
+      return '<div class="gap"></div><div class="group"><div class="row add" data-go="records-new-person">+ Add Person</div><div class="row add" data-go="records-new-vehicle">+ Add Vehicle</div><div class="row add" data-go="records-new-location">+ Add Location</div><div class="row add" data-go="records-new-org">+ Add Organisation</div><div class="row add" data-go="records-new-item">+ Add Item</div></div>'
         + `${U.sh(`PERSONS (${persons.length})`)}<div class="group">${persons.length ? persons.map((p) => OD.personCard(p, { go: OD.go('person', { id: p.id }) })).join('') : U.empty('No persons added yet')}</div>`
         + `${U.sh(`VEHICLES (${vehicles.length})`)}<div class="group">${vehicles.length ? vehicles.map((v) => OD.vehicleCard(v, { go: OD.go('vehicle', { id: v.id }) })).join('') : U.empty('No vehicles added yet')}</div>`
         + `${U.sh(`LOCATIONS (${locations.length})`)}<div class="group">${locations.length ? locations.map((l) => OD.locationCard(l, { go: OD.go('location', { id: l.id }) })).join('') : U.empty('No locations added yet')}</div>`
         + `${U.sh(`ORGANISATIONS (${orgs.length})`)}<div class="group">${orgs.length ? orgs.map((o) => OD.orgCard(o, { go: OD.go('org', { id: o.id }) })).join('') : U.empty('No organisations added yet')}</div>`
-        + '<div class="footnote">Records added here become searchable via Query Person / Vehicle / Location / Organisation in OnDuty. Stored only in this browser.</div>';
+        + `${U.sh(`ITEMS (${items.length})`)}<div class="group">${items.length ? items.map(itemRow).join('') : U.empty('No items added yet')}</div>`
+        + '<div class="footnote">Records added here become searchable via Query Person / Vehicle / Location / Organisation / Item in OnDuty. Stored only in this browser.</div>';
     },
   });
 
@@ -332,5 +335,36 @@
     const id = OD.uid('G');
     OD.db.orgs[id] = { id, name: x.name.toUpperCase(), cat: x.cat || 'Business', type: x.type || '', addr: x.addr || '', alerts: [] };
     OD.tmp.recorg = {}; OD.save(); N.pop(); OD.ui.toast(`${OD.org(id).name} added`);
+  });
+
+  OD.forms['records-item'] = {
+    fields: [
+      { h: 'ITEM DETAILS' },
+      { t: 'ident', l: 'Identifier / Serial Number', req: 1, upper: 1 },
+      { pk: 'cat', l: 'Category', o: 'qiCats' },
+      { t: 'desc', l: 'Description', opt: 1 },
+      { seg: 'status', l: 'Status', o: ['No record of interest', 'Reported Stolen'] },
+      { dt: 'stolenDate', l: 'Date Reported Stolen', time: false, w: (d) => d.status === 'Reported Stolen' },
+      { note: 'Adds a real item record to this browser’s NIA data. Stored only here – not sent anywhere.' },
+    ],
+  };
+  screen('records-new-item', {
+    title: 'Add Item',
+    target: () => OD.resolve('tmp:recitem'),
+    body: () => {
+      const d = OD.resolve('tmp:recitem');
+      if (!d._loaded) Object.assign(d, { cat: 'Other', status: 'No record of interest', _loaded: true });
+      return OD.renderFields(OD.forms['records-item'].fields, d, { ref: 'tmp:recitem', fid: 'records-item', pw: null, reviewed: d._reviewed }) + '<button class="bigbtn" data-act="recordsSaveItem">Add Item</button>';
+    },
+  });
+  action('recordsSaveItem', (d, el, ctx) => {
+    const x = OD.resolve('tmp:recitem');
+    if (!x.ident) { x._reviewed = true; OD.save(); N.refresh(ctx.u); return OD.ui.toast('Identifier / serial number is required'); }
+    const ident = x.ident.toUpperCase();
+    if (Object.values(OD.db.items).some((i) => i.ident === ident)) return OD.ui.toast('An item with that identifier already exists');
+    const id = OD.uid('I');
+    const stolen = x.status === 'Reported Stolen';
+    OD.db.items[id] = { id, ident, cat: x.cat || 'Other', desc: x.desc || '', status: x.status || 'No record of interest', stolenDate: stolen ? (x.stolenDate || '') : '', occ: null };
+    OD.tmp.recitem = {}; OD.save(); N.pop(); OD.ui.toast(`${ident} added`);
   });
 })();
