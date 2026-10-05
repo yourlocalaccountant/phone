@@ -43,7 +43,7 @@
     if (mode === 'setup') {
       return `<div class="authscreen">${badge}<div class="au-title">Create Admin Account</div><div class="au-sub">No accounts exist yet in this browser. Create the first account (it will be an Admin account) to continue.</div><form data-f="setup"><input name="name" placeholder="Full name" autocomplete="off" required><input name="email" type="email" placeholder="Email" autocomplete="username" required><input name="pass" type="password" placeholder="Password" autocomplete="new-password" required><input name="pass2" type="password" placeholder="Confirm password" autocomplete="new-password" required><div class="au-err">${esc(err)}</div><button type="submit" class="au-submit">Create Account</button></form><div class="au-hint">Fictional login for realism only. Accounts live in this browser's storage – this is not a real Police credential and isn't checked against any real system.</div></div>`;
     }
-    return `<div class="authscreen">${badge}<div class="au-title">Log In</div><div class="au-sub">Sign in to OnDuty (demo).</div><form data-f="login"><input name="email" type="email" placeholder="Email" autocomplete="username" required><input name="pass" type="password" placeholder="Password" autocomplete="current-password" required><div class="au-err">${esc(err)}</div><button type="submit" class="au-submit">Log In</button></form><div class="au-hint">Fictional login for realism only. Accounts live in this browser's storage – this is not a real Police credential and isn't checked against any real system.</div></div>`;
+    return `<div class="authscreen">${badge}<div class="au-title">Log In</div><div class="au-sub">Sign in to OnDuty (demo).</div><form data-f="login"><input name="email" type="email" placeholder="Email" autocomplete="username" required><input name="pass" type="password" placeholder="Password" autocomplete="current-password" required><div class="au-err">${esc(err)}</div><button type="submit" class="au-submit">Log In</button></form><button type="button" class="au-forgot" data-act="authReset">Forgot your password? Reset this browser's data</button><div class="au-hint">Fictional login for realism only. Accounts live in this browser's storage – this is not a real Police credential and isn't checked against any real system.</div></div>`;
   };
   const renderAuth = () => {
     const root = authRoot(); if (!root) return;
@@ -79,6 +79,7 @@
   OD.showAuth = () => { authErr = ''; renderAuth(); };
   OD.hideAuth = hideAuth;
   OD.logOut = () => { OD.db.session = null; OD.db.me = { qid: '', name: '' }; OD.saveNow(); N.homeScreen(); };
+  OD.action('authReset', () => OD.ui.confirm('Reset This Browser', 'Forgot your password? This permanently erases every account and all data stored in this browser (there is no password recovery – it never leaves your browser). You will land on "Create Admin Account" afterwards.', 'Erase Everything', () => OD.resetDemo(), true));
 
   OD.onRoute = () => {
     if ((N.st.app === 'od' || N.st.app === 'sam' || N.st.app === 'cad') && !OD.db.session) OD.showAuth(); else OD.hideAuth();
