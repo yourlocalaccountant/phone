@@ -400,7 +400,7 @@
      that exist in this browser (added via CAD > Records, or the "create
      new" option inside paperwork) – nothing is fabricated. A search with no
      match returns zero results, same as a real query that finds nothing. */
-  OD.colourHex = { Red: '#e8352d', Blue: '#2f6fd6', White: '#fff', Silver: '#b8bec6', Black: '#2a2a2a', Grey: '#7d858f', Green: '#2f8f4e', Yellow: '#f2c230', Maroon: '#7a1f2b', Gold: '#c9a13b' };
+  OD.colourHex = { Red: '#e8352d', Blue: '#2f6fd6', White: '#fff', Silver: '#b8bec6', Black: '#2a2a2a', Grey: '#7d858f', Green: '#2f8f4e', Yellow: '#f2c230', Maroon: '#7a1f2b', Gold: '#c9a13b', Orange: '#e8821e', Pink: '#e85d9e', Purple: '#8a4fbf', Brown: '#6b4a2f' };
 
   OD.gen = {};
   OD.gen.parseName = (raw) => {
